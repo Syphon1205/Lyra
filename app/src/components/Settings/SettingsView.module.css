@@ -1,3 +1,57 @@
+.settingsLayout {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  background: var(--lyra-canvas);
+}
+
+.settingsSidebar {
+  width: 210px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--lyra-border);
+  padding: 20px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow-y: auto;
+  user-select: none;
+}
+
+.settingsSidebarItem {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 10px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--lyra-text-muted);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: all 140ms ease;
+  width: 100%;
+}
+
+.settingsSidebarItem:hover {
+  background: var(--lyra-surface);
+  color: var(--lyra-text);
+}
+
+.settingsSidebarItemActive {
+  background: var(--lyra-surface);
+  color: var(--lyra-accent-solid);
+  font-weight: 600;
+}
+
+.settingsContent {
+  flex: 1;
+  overflow-y: auto;
+  padding: 28px 36px 60px;
+}
+
 .container {
   flex: 1;
   display: flex;

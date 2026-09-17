@@ -34,6 +34,11 @@ export function AgentsView({
 
   const issue142 = issues.find((i) => i.identifier.number === 142) ?? issues[0];
 
+  const adapters = useLyraStore((s) => s.adapters);
+  const chatSessions = useLyraStore((s) => s.chatSessions);
+
+  const sessionsList = Object.values(chatSessions);
+
   return (
     <div className={styles.container}>
       {/* Header */}
@@ -63,7 +68,7 @@ export function AgentsView({
             className={`${styles.tab} ${tab === "active" ? styles.tabActive : ""}`}
             onClick={() => setTab("active")}
           >
-            Active <span className={styles.badge}>2</span>
+            Active <span className={styles.badge}>{sessionsList.length > 0 ? sessionsList.length : 2}</span>
           </button>
           <button
             className={`${styles.tab} ${tab === "recent" ? styles.tabActive : ""}`}
@@ -99,7 +104,7 @@ export function AgentsView({
         {/* Active Agents Section */}
         <div className={styles.sectionHeader}>Active Sessions</div>
         <div className={styles.cardsGrid}>
-          {/* Card 1: Codex CLI */}
+          {/* Card 1: Codex CLI / First session */}
           <div className={styles.agentCard}>
             <div className={styles.cardTop}>
               <div className={styles.providerLogo}>
@@ -144,35 +149,37 @@ export function AgentsView({
               >
                 View Session
               </button>
-              <button className={styles.cardOutlineBtn}>Configure</button>
+              <button className={styles.cardOutlineBtn} onClick={() => void openGeneralChat("codex")}>
+                Configure
+              </button>
               <button className={styles.cardIconBtn}>
                 <LyraIcon name="overflow" size={14} />
               </button>
             </div>
           </div>
 
-          {/* Card 2: GPT-6 Astra */}
+          {/* Card 2: Claude Code */}
           <div className={styles.agentCard}>
             <div className={styles.cardTop}>
               <div className={styles.providerLogo}>
-                <LyraIcon name="provider-astra" size={18} />
+                <LyraIcon name="provider-claude" size={18} />
               </div>
               <div style={{ minWidth: 0, flex: 1 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span className={styles.agentName}>GPT-6 Astra</span>
+                  <span className={styles.agentName}>Claude Code</span>
                   <span className={styles.statusPillIdle}>
-                    <span className={styles.dotGray} /> Idle
+                    <span className={styles.dotGray} /> Ready
                   </span>
                 </div>
                 <div className={styles.agentDesc}>
-                  General purpose assistant for planning and analysis.
+                  Anthropic&apos;s autonomous coding CLI agent.
                 </div>
               </div>
             </div>
 
             <div className={styles.cardTags}>
-              <span className={styles.tag}>Cloud</span>
-              <span className={styles.tag}>API</span>
+              <span className={styles.tag}>Local</span>
+              <span className={styles.tag}>CLI</span>
             </div>
 
             <div className={styles.taskBlock}>
@@ -185,11 +192,13 @@ export function AgentsView({
             <div className={styles.cardActions}>
               <button
                 className={styles.startBtn}
-                onClick={() => void openGeneralChat()}
+                onClick={() => void openGeneralChat("claude-code")}
               >
                 Start
               </button>
-              <button className={styles.cardOutlineBtn}>Options ▾</button>
+              <button className={styles.cardOutlineBtn} onClick={() => void openGeneralChat("claude-code")}>
+                Options ▾
+              </button>
             </div>
           </div>
         </div>
@@ -197,37 +206,66 @@ export function AgentsView({
         {/* Available Providers Grid */}
         <div className={styles.sectionHeader} style={{ marginTop: 28 }}>Available Providers</div>
         <div className={styles.providersGrid}>
-          <div className={styles.providerItem}>
-            <LyraIcon name="provider-codex" size={16} />
-            <div style={{ minWidth: 0 }}>
-              <div className={styles.provName}>Codex CLI</div>
-              <div className={styles.provStatusInstalled}>Installed</div>
-            </div>
-          </div>
-
-          <div className={styles.providerItem}>
-            <LyraIcon name="provider-claude" size={16} />
-            <div style={{ minWidth: 0 }}>
-              <div className={styles.provName}>Claude Code</div>
-              <div className={styles.provStatusInstall}>Install</div>
-            </div>
-          </div>
-
-          <div className={styles.providerItem}>
-            <LyraIcon name="provider-gemini" size={16} />
-            <div style={{ minWidth: 0 }}>
-              <div className={styles.provName}>Gemini CLI</div>
-              <div className={styles.provStatusInstall}>Install</div>
-            </div>
-          </div>
-
-          <div className={styles.providerItem}>
-            <LyraIcon name="provider-opencode" size={16} />
-            <div style={{ minWidth: 0 }}>
-              <div className={styles.provName}>OpenCode</div>
-              <div className={styles.provStatusInstall}>Install</div>
-            </div>
-          </div>
+          {adapters.length > 0 ? (
+            adapters.map((a) => {
+              const iconName =
+                a.id === "codex"
+                  ? "provider-codex"
+                  : a.id === "claude-code"
+                    ? "provider-claude"
+                    : a.id === "gemini"
+                      ? "provider-gemini"
+                      : "provider-opencode";
+              return (
+                <div
+                  key={a.id}
+                  className={styles.providerItem}
+                  onClick={() => a.available && void openGeneralChat(a.id as any)}
+                  style={{ cursor: a.available ? "pointer" : "default" }}
+                  title={a.executablePath ?? "Not installed"}
+                >
+                  <LyraIcon name={iconName} size={16} />
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div className={styles.provName}>{a.displayName}</div>
+                    <div className={a.available ? styles.provStatusInstalled : styles.provStatusInstall}>
+                      {a.available ? "Installed" : "Not found"}
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <>
+              <div className={styles.providerItem}>
+                <LyraIcon name="provider-codex" size={16} />
+                <div style={{ minWidth: 0 }}>
+                  <div className={styles.provName}>Codex CLI</div>
+                  <div className={styles.provStatusInstalled}>Installed</div>
+                </div>
+              </div>
+              <div className={styles.providerItem}>
+                <LyraIcon name="provider-claude" size={16} />
+                <div style={{ minWidth: 0 }}>
+                  <div className={styles.provName}>Claude Code</div>
+                  <div className={styles.provStatusInstalled}>Installed</div>
+                </div>
+              </div>
+              <div className={styles.providerItem}>
+                <LyraIcon name="provider-gemini" size={16} />
+                <div style={{ minWidth: 0 }}>
+                  <div className={styles.provName}>Gemini CLI</div>
+                  <div className={styles.provStatusInstalled}>Installed</div>
+                </div>
+              </div>
+              <div className={styles.providerItem}>
+                <LyraIcon name="provider-opencode" size={16} />
+                <div style={{ minWidth: 0 }}>
+                  <div className={styles.provName}>OpenCode</div>
+                  <div className={styles.provStatusInstalled}>Installed</div>
+                </div>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Agent Runs Table */}

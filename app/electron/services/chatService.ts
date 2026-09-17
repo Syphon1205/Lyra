@@ -98,12 +98,21 @@ export class ChatService {
     this.emit(sessionId, { type: "run.canceled", runId: running.runId });
   }
 
-  sendMessage(sessionId: ID, text: string): ChatMessageRecord {
+  sendMessage(
+    sessionId: ID,
+    text: string,
+    options?: { model?: string; reasoningEffort?: string; repoPath?: string; providerId?: AgentProviderId }
+  ): ChatMessageRecord {
     if (this.runningBySession.has(sessionId)) {
       throw new Error("A run is already in progress for this session.");
     }
     const session = this.getSession(sessionId);
     if (!session) throw new Error("Session not found");
+
+    if (options?.providerId && options.providerId !== session.providerId) {
+      this.db.prepare("UPDATE chat_sessions SET provider_id = ? WHERE id = ?").run(options.providerId, sessionId);
+      session.providerId = options.providerId;
+    }
 
     const userMessage = this.appendMessage(sessionId, "user", text);
     this.saveDraft(sessionId, "");
@@ -115,10 +124,26 @@ export class ChatService {
     }
 
     const runId = randomUUID();
+    let promptWithContext = text;
+    if (session.issueId && session.messages.length <= 1) {
+      try {
+        const issueRow = this.db.prepare("SELECT * FROM issues WHERE id = ?").get(session.issueId) as any;
+        if (issueRow) {
+          promptWithContext = `[Context: Issue ${issueRow.prefix}-${issueRow.number} "${issueRow.title}"]\n${issueRow.body ? `Issue details: ${issueRow.body}\n` : ""}${text}`;
+        }
+      } catch {
+        // ignore
+      }
+    }
+
+    const targetCwd = options?.repoPath || (this.repoPath && this.repoPath.length > 0 ? this.repoPath : os.tmpdir());
+
     const request: AgentRunRequest = {
       runId,
-      prompt: text,
-      cwd: this.repoPath && this.repoPath.length > 0 ? this.repoPath : os.tmpdir(),
+      prompt: promptWithContext,
+      cwd: targetCwd,
+      model: options?.model,
+      reasoningEffort: options?.reasoningEffort,
       resumeSessionId: session.providerSessionId,
     };
 

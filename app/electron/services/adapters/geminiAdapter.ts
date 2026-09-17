@@ -7,13 +7,34 @@ export class GeminiAdapter implements AgentAdapter {
   readonly id = "gemini" as const;
   readonly displayName = "Gemini CLI";
 
-  async detect(): Promise<AgentAdapterDescriptor> {
-    const executablePath = await resolveExecutable("gemini");
+  async detect(customPath?: string): Promise<AgentAdapterDescriptor> {
+    const executablePath = customPath || (await resolveExecutable("gemini"));
+    let version: string | undefined;
+    let available = false;
+    let status: AgentAdapterDescriptor["status"] = "not_found";
+
+    if (executablePath) {
+      available = true;
+      status = "installed_ready";
+      try {
+        const { execFile } = await import("node:child_process");
+        const { promisify } = await import("node:util");
+        const { stdout } = await promisify(execFile)(executablePath, ["--version"], { encoding: "utf8", timeout: 3000 });
+        version = stdout.trim().split("\n")[0];
+      } catch {
+        status = "installed_ready";
+      }
+    }
+
     return {
       id: this.id,
       displayName: this.displayName,
-      available: !!executablePath,
+      status,
+      available,
       executablePath,
+      version,
+      supportedModels: ["gemini-2.5-pro", "gemini-2.5-flash"],
+      supportedReasoningEfforts: ["medium"],
       capabilities: {
         streaming: true,
         toolActivity: true,
@@ -25,13 +46,17 @@ export class GeminiAdapter implements AgentAdapter {
   }
 
   start(request: AgentRunRequest, onEvent: (event: AgentRunEvent) => void) {
-    const args = ["run", request.prompt];
+    const args = ["-p", request.prompt];
+    if (request.model) {
+      args.push("-m", request.model);
+    }
     let canceled = false;
     let proc: RunningProcess | undefined;
 
-    void resolveExecutable("gemini").then((resolved) => {
+    void (async () => {
+      const resolved = request.customExecutablePath || (await resolveExecutable("gemini")) || "gemini";
       if (canceled) return;
-      proc = new RunningProcess(resolved ?? "gemini", args, { cwd: request.cwd, timeoutMs: 5 * 60_000 });
+      proc = new RunningProcess(resolved, args, { cwd: request.cwd, timeoutMs: 5 * 60_000 });
       onEvent({ type: "run.started", runId: request.runId });
 
       proc.on("line", (line: string) => {
@@ -52,7 +77,7 @@ export class GeminiAdapter implements AgentAdapter {
           });
         }
       });
-    });
+    })();
 
     return {
       cancel: () => {

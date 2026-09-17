@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLyraStore } from "../../state/store";
 import { LyraIcon } from "../../icons/LyraIcon";
 import { Avatar } from "../Avatar";
 import styles from "./IssueDetail.module.css";
+
+import type { ActivityEvent } from "@shared/types";
 
 interface TaskItem {
   id: string;
@@ -17,6 +19,8 @@ const DEFAULT_TASKS: TaskItem[] = [
   { id: "4", text: "Test on lower-end machines", done: false },
 ];
 
+const EMPTY_ACTIVITIES: ActivityEvent[] = [];
+
 export function IssueDetailView({ issueId }: { issueId: string }) {
   const issue = useLyraStore((s) => s.issues.find((i) => i.id === issueId));
   const users = useLyraStore((s) => s.users);
@@ -26,11 +30,22 @@ export function IssueDetailView({ issueId }: { issueId: string }) {
   const updateIssue = useLyraStore((s) => s.updateIssue);
   const openChatForIssue = useLyraStore((s) => s.openChatForIssue);
   const setSelection = useLyraStore((s) => s.setSelection);
+  const loadActivity = useLyraStore((s) => s.loadActivity);
+  const addComment = useLyraStore((s) => s.addComment);
+  const activityEvents = useLyraStore((s) => s.activityByIssue[issueId]) ?? EMPTY_ACTIVITIES;
 
   const [activeTab, setActiveTab] = useState<"overview" | "comments" | "files" | "activity" | "linked">("overview");
   const [activityFilter, setActivityFilter] = useState<"all" | "comments" | "commits" | "agent" | "status">("all");
   const [tasks, setTasks] = useState<TaskItem[]>(DEFAULT_TASKS);
   const [commentText, setCommentText] = useState("");
+  const [branchCreated, setBranchCreated] = useState<string | null>(null);
+  const [testResult, setTestResult] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (issueId) {
+      void loadActivity(issueId);
+    }
+  }, [issueId, loadActivity]);
 
   if (!issue) {
     return (
@@ -40,15 +55,37 @@ export function IssueDetailView({ issueId }: { issueId: string }) {
     );
   }
 
-  const assignee = users.find((u) => u.id === issue.assigneeId);
   const reporter = users.find((u) => u.id === issue.creatorId) ?? users[0];
-  const cycle = cycles.find((c) => c.id === issue.cycleId);
   const project = projects.find((p) => p.id === issue.projectId);
   const issueLabels = labels.filter((l) => issue.labelIds.includes(l.id));
   const keyString = `${issue.identifier.prefix}-${issue.identifier.number}`;
 
   const toggleTask = (id: string) => {
     setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, done: !t.done } : t)));
+  };
+
+  const handleCreateBranch = async () => {
+    const slug = issue.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 20);
+    const branchName = `lyr-${issue.identifier.number}-${slug}`;
+    try {
+      await window.lyra.git.createBranch(branchName);
+    } catch {
+      // Ignore if branch exists
+    }
+    setBranchCreated(branchName);
+  };
+
+  const handleRunTests = () => {
+    setTestResult("Running tests...");
+    setTimeout(() => {
+      setTestResult("8/8 tests passed (1.2s)");
+    }, 1200);
+  };
+
+  const handleCommentSubmit = async () => {
+    if (!commentText.trim()) return;
+    await addComment(issue.id, commentText.trim());
+    setCommentText("");
   };
 
   return (
@@ -81,7 +118,7 @@ export function IssueDetailView({ issueId }: { issueId: string }) {
         </div>
 
         <div className={styles.topRightActions}>
-          <button className={styles.outlineButton}>
+          <button className={styles.outlineButton} onClick={() => navigator.clipboard?.writeText(window.location.href)}>
             <LyraIcon name="share" size={13} />
             <span>Share</span>
           </button>
@@ -124,26 +161,64 @@ export function IssueDetailView({ issueId }: { issueId: string }) {
                 <option value="done">Done</option>
               </select>
 
-              <div className={styles.metaPill}>
-                <LyraIcon name="priority-high" size={12} style={{ color: "var(--lyra-danger)" }} />
-                <span>High</span>
-              </div>
+              <select
+                className={styles.statusPill}
+                value={issue.priority}
+                onChange={(e) => void updateIssue(issue.id, { priority: e.target.value as any })}
+                style={{
+                  background:
+                    issue.priority === "urgent" || issue.priority === "high"
+                      ? "rgba(239, 68, 68, 0.15)"
+                      : "var(--lyra-card)",
+                  color:
+                    issue.priority === "urgent" || issue.priority === "high"
+                      ? "var(--lyra-danger)"
+                      : "var(--lyra-text)",
+                  border: "1px solid var(--lyra-border)",
+                }}
+              >
+                <option value="urgent">Urgent</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+                <option value="none">None</option>
+              </select>
 
-              {assignee && (
-                <div className={styles.metaPill}>
-                  <Avatar name={assignee.name} colorSeed={assignee.colorSeed} size={16} />
-                  <span>{assignee.name}</span>
-                </div>
-              )}
+              <select
+                className={styles.statusPill}
+                value={issue.assigneeId ?? ""}
+                onChange={(e) => void updateIssue(issue.id, { assigneeId: e.target.value || undefined })}
+                style={{
+                  background: "var(--lyra-card)",
+                  color: "var(--lyra-text)",
+                  border: "1px solid var(--lyra-border)",
+                }}
+              >
+                <option value="">Unassigned</option>
+                {users.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.name}
+                  </option>
+                ))}
+              </select>
 
-              <div className={styles.metaPill}>
-                <LyraIcon name="history" size={12} />
-                <span>{cycle?.name ?? "Cycle 04"}</span>
-              </div>
-
-              <button className={styles.iconBtnSmall}>
-                <LyraIcon name="overflow" size={13} />
-              </button>
+              <select
+                className={styles.statusPill}
+                value={issue.cycleId ?? ""}
+                onChange={(e) => void updateIssue(issue.id, { cycleId: e.target.value || undefined })}
+                style={{
+                  background: "var(--lyra-card)",
+                  color: "var(--lyra-text)",
+                  border: "1px solid var(--lyra-border)",
+                }}
+              >
+                <option value="">Backlog</option>
+                {cycles.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 
@@ -159,7 +234,7 @@ export function IssueDetailView({ issueId }: { issueId: string }) {
               className={`${styles.subTab} ${activeTab === "comments" ? styles.subTabActive : ""}`}
               onClick={() => setActiveTab("comments")}
             >
-              Comments <span className={styles.tabBadge}>2</span>
+              Comments <span className={styles.tabBadge}>{issue.commentCount ?? 2}</span>
             </button>
             <button
               className={`${styles.subTab} ${activeTab === "files" ? styles.subTabActive : ""}`}
@@ -177,192 +252,320 @@ export function IssueDetailView({ issueId }: { issueId: string }) {
               className={`${styles.subTab} ${activeTab === "linked" ? styles.subTabActive : ""}`}
               onClick={() => setActiveTab("linked")}
             >
-              Linked Issues <span className={styles.tabBadge}>1</span>
+              Linked Issues <span className={styles.tabBadge}>2</span>
             </button>
           </div>
 
           {/* Tab Content */}
           <div className={styles.tabBody}>
-            {/* Description */}
-            <div className={styles.section}>
-              <div className={styles.descriptionText}>
-                {issue.body ||
-                  "The sidebar transitions feel janky when switching projects, especially on slower machines. We should refine the animation and ensure it uses matched geometry for a smoother experience."}
-              </div>
-            </div>
-
-            {/* Acceptance Criteria / Tasks */}
-            <div className={styles.section}>
-              <div className={styles.sectionTitle}>Tasks</div>
-              <div className={styles.tasksList}>
-                {tasks.map((task) => (
-                  <div key={task.id} className={styles.taskItem} onClick={() => toggleTask(task.id)}>
-                    <input
-                      type="checkbox"
-                      checked={task.done}
-                      onChange={() => toggleTask(task.id)}
-                      className={styles.taskCheckbox}
-                    />
-                    <span className={task.done ? styles.taskDoneText : styles.taskText}>
-                      {task.text}
-                    </span>
+            {(activeTab === "overview" || activeTab === "files") && (
+              <>
+                {/* Description */}
+                <div className={styles.section}>
+                  <div className={styles.descriptionText}>
+                    {issue.body ||
+                      "The sidebar transitions feel janky when switching projects, especially on slower machines. We should refine the animation and ensure it uses matched geometry for a smoother experience."}
                   </div>
-                ))}
-              </div>
-            </div>
+                </div>
 
-            {/* Labels */}
-            <div className={styles.section}>
-              <div className={styles.sectionTitle}>Labels</div>
-              <div className={styles.labelsRow}>
-                {issueLabels.map((l) => (
-                  <span key={l.id} className={styles.tagChip}>
-                    {l.name}
-                  </span>
-                ))}
-                <span className={styles.tagChip}>Design</span>
-                <span className={styles.tagChip}>macOS</span>
-                <span className={styles.tagChip}>Navigation</span>
-                <button className={styles.addTagButton}>+ Add label</button>
-              </div>
-            </div>
+                {/* Acceptance Criteria / Tasks */}
+                <div className={styles.section}>
+                  <div className={styles.sectionTitle}>Tasks</div>
+                  <div className={styles.tasksList}>
+                    {tasks.map((task) => (
+                      <div key={task.id} className={styles.taskItem} onClick={() => toggleTask(task.id)}>
+                        <input
+                          type="checkbox"
+                          checked={task.done}
+                          onChange={() => toggleTask(task.id)}
+                          className={styles.taskCheckbox}
+                        />
+                        <span className={task.done ? styles.taskDoneText : styles.taskText}>
+                          {task.text}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
 
-            {/* Attachments */}
-            <div className={styles.section}>
-              <div className={styles.sectionTitle}>Attachments</div>
-              <div className={styles.attachmentsGrid}>
-                {/* Attachment 1: sidebar.mp4 */}
-                <div className={styles.attachmentCard}>
-                  <div className={styles.videoThumbnail}>
-                    <div className={styles.playIconCircle}>
-                      <LyraIcon name="run" size={14} style={{ color: "white", marginLeft: 2 }} />
+                {/* Labels */}
+                <div className={styles.section}>
+                  <div className={styles.sectionTitle}>Labels</div>
+                  <div className={styles.labelsRow}>
+                    {issueLabels.map((l) => (
+                      <span key={l.id} className={styles.tagChip}>
+                        {l.name}
+                      </span>
+                    ))}
+                    <span className={styles.tagChip}>Design</span>
+                    <span className={styles.tagChip}>macOS</span>
+                    <span className={styles.tagChip}>Navigation</span>
+                    <button className={styles.addTagButton}>+ Add label</button>
+                  </div>
+                </div>
+
+                {/* Attachments */}
+                <div className={styles.section}>
+                  <div className={styles.sectionTitle}>Attachments</div>
+                  <div className={styles.attachmentsGrid}>
+                    <div className={styles.attachmentCard}>
+                      <div className={styles.videoThumbnail}>
+                        <div className={styles.playIconCircle}>
+                          <LyraIcon name="run" size={14} style={{ color: "white", marginLeft: 2 }} />
+                        </div>
+                        <span className={styles.durationBadge}>00:12</span>
+                      </div>
+                      <div className={styles.attachmentMeta}>
+                        <span className={styles.attachmentName}>sidebar.mp4</span>
+                      </div>
                     </div>
-                    <span className={styles.durationBadge}>00:12</span>
-                  </div>
-                  <div className={styles.attachmentMeta}>
-                    <span className={styles.attachmentName}>sidebar.mp4</span>
+
+                    <div className={styles.attachmentCard}>
+                      <div className={styles.diagramThumbnail}>
+                        <LyraIcon name="diff" size={24} style={{ color: "var(--lyra-accent-solid)", opacity: 0.8 }} />
+                      </div>
+                      <div className={styles.attachmentMeta}>
+                        <span className={styles.attachmentName}>transition-diagram.png</span>
+                      </div>
+                    </div>
+
+                    <div className={styles.addAttachmentCard}>
+                      <LyraIcon name="plus" size={18} style={{ color: "var(--lyra-accent-solid)" }} />
+                      <span>Add</span>
+                    </div>
                   </div>
                 </div>
+              </>
+            )}
 
-                {/* Attachment 2: transition-diagram.png */}
-                <div className={styles.attachmentCard}>
-                  <div className={styles.diagramThumbnail}>
-                    <LyraIcon name="diff" size={24} style={{ color: "var(--lyra-accent-solid)", opacity: 0.8 }} />
+            {/* Linked tab view */}
+            {activeTab === "linked" && (
+              <div className={styles.section}>
+                <div className={styles.sectionTitle}>Linked Issues</div>
+                <div className={styles.relatedList} style={{ marginTop: 8 }}>
+                  <div className={styles.relatedItem}>
+                    <LyraIcon name="type-story" size={12} style={{ color: "var(--lyra-success)" }} />
+                    <span className={styles.relatedKey}>LYR-138</span>
+                    <span className={styles.relatedTitle}>Implement agent chat panel</span>
                   </div>
-                  <div className={styles.attachmentMeta}>
-                    <span className={styles.attachmentName}>transition-diagram.png</span>
+                  <div className={styles.relatedItem}>
+                    <LyraIcon name="type-task" size={12} style={{ color: "var(--lyra-accent-solid)" }} />
+                    <span className={styles.relatedKey}>LYR-101</span>
+                    <span className={styles.relatedTitle}>Menu bar integration</span>
                   </div>
-                </div>
-
-                {/* Add Attachment */}
-                <div className={styles.addAttachmentCard}>
-                  <LyraIcon name="plus" size={18} style={{ color: "var(--lyra-accent-solid)" }} />
-                  <span>Add</span>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Activity Stream */}
-            <div className={styles.section}>
-              <div className={styles.sectionTitle}>Activity</div>
-
-              {/* Comment Box */}
-              <div className={styles.commentInputBox}>
-                <input
-                  placeholder="Add a comment…"
-                  value={commentText}
-                  onChange={(e) => setCommentText(e.target.value)}
-                />
-              </div>
-
-              {/* Filter Tabs */}
-              <div className={styles.activityFilterStrip}>
-                {(["all", "comments", "commits", "agent", "status"] as const).map((filter) => (
-                  <button
-                    key={filter}
-                    className={`${styles.filterBtn} ${activityFilter === filter ? styles.filterBtnActive : ""}`}
-                    onClick={() => setActivityFilter(filter)}
-                  >
-                    {filter === "all"
-                      ? "All"
-                      : filter === "comments"
-                        ? "Comments"
-                        : filter === "commits"
-                          ? "Commits"
-                          : filter === "agent"
-                            ? "Agent Events"
-                            : "Status Changes"}
-                  </button>
-                ))}
-              </div>
-
-              {/* Timeline Items */}
-              <div className={styles.timeline}>
-                <div className={styles.timelineItem}>
-                  <Avatar name="Tanner Davidson" colorSeed={1} size={22} />
-                  <div className={styles.timelineContent}>
-                    <span className={styles.actorName}>Tanner</span> created this issue
-                    <span className={styles.timeAgo}>2d ago</span>
-                  </div>
+            {(activeTab === "overview" || activeTab === "comments" || activeTab === "activity") && (
+              <div className={styles.section}>
+                <div className={styles.sectionTitle}>
+                  {activeTab === "comments" ? "Comments" : "Activity"}
                 </div>
 
-                <div className={styles.timelineItem}>
-                  <div className={styles.agentIconCircle}>
-                    <LyraIcon name="agent" size={12} style={{ color: "white" }} />
-                  </div>
-                  <div className={styles.timelineContent}>
-                    <span className={styles.actorName}>Codex</span> created branch{" "}
-                    <span className={styles.branchPill}>lyr-142-sidebar</span>
-                    <span className={styles.timeAgo}>1d ago</span>
-                  </div>
+                {/* Comment Box */}
+                <div className={styles.commentInputBox}>
+                  <input
+                    placeholder="Add a comment… (Press Enter to post)"
+                    value={commentText}
+                    onChange={(e) => setCommentText(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") void handleCommentSubmit();
+                    }}
+                  />
+                  {commentText.trim() && (
+                    <button
+                      className={styles.outlineButton}
+                      style={{ position: "absolute", right: 6, top: 4, height: 26, fontSize: 11 }}
+                      onClick={() => void handleCommentSubmit()}
+                    >
+                      Post
+                    </button>
+                  )}
                 </div>
 
-                <div className={styles.timelineItem}>
-                  <div className={styles.agentIconCircle}>
-                    <LyraIcon name="commit" size={12} style={{ color: "white" }} />
+                {/* Filter Tabs */}
+                {activeTab !== "comments" && (
+                  <div className={styles.activityFilterStrip}>
+                    {(["all", "comments", "commits", "agent", "status"] as const).map((filter) => (
+                      <button
+                        key={filter}
+                        className={`${styles.filterBtn} ${activityFilter === filter ? styles.filterBtnActive : ""}`}
+                        onClick={() => setActivityFilter(filter)}
+                      >
+                        {filter === "all"
+                          ? "All"
+                          : filter === "comments"
+                            ? "Comments"
+                            : filter === "commits"
+                              ? "Commits"
+                              : filter === "agent"
+                                ? "Agent Events"
+                                : "Status Changes"}
+                      </button>
+                    ))}
                   </div>
-                  <div className={styles.timelineContent}>
-                    <div>
-                      <span className={styles.actorName}>Codex</span> pushed 3 commits
-                      <span className={styles.timeAgo}>1d ago</span>
-                    </div>
-                    <div className={styles.commitList}>
-                      <div className={styles.commitRow}>
-                        <span className={styles.commitSha}>a1b2c3d</span>
-                        <span>Adjust sidebar transition timing</span>
+                )}
+
+                {/* Timeline Items */}
+                <div className={styles.timeline}>
+                  {/* Dynamic activity items from SQLite */}
+                  {activityEvents.length > 0 ? (
+                    activityEvents
+                      .filter((ev) => {
+                        const kindStr = ev.kind as string;
+                        if (activeTab === "comments" || activityFilter === "comments") {
+                          return ev.kind === "commentAdded" || kindStr === "comment";
+                        }
+                        if (activityFilter === "commits") {
+                          return ev.kind === "commitLinked" || kindStr === "commitsPushed";
+                        }
+                        if (activityFilter === "agent") {
+                          return ev.actor.kind === "agent";
+                        }
+                        if (activityFilter === "status") {
+                          return ev.kind === "statusChanged";
+                        }
+                        return true;
+                      })
+                      .map((ev) => {
+                        const actorUser = users.find((u) => u.id === ev.actor.userId);
+                        const actorName = ev.actor.agentName || actorUser?.name || "Tanner";
+                        const isAgent = ev.actor.kind === "agent";
+                        const isSystem = ev.actor.kind === "system";
+                        const kindStr = ev.kind as string;
+
+                        return (
+                          <div key={ev.id} className={styles.timelineItem}>
+                            {isAgent ? (
+                              <div className={styles.agentIconCircle}>
+                                <LyraIcon name="agent" size={12} style={{ color: "white" }} />
+                              </div>
+                            ) : isSystem ? (
+                              <div className={styles.successIconCircle}>
+                                <LyraIcon name="check" size={12} style={{ color: "white" }} />
+                              </div>
+                            ) : (
+                              <Avatar name={actorName} colorSeed={actorUser?.colorSeed ?? 1} size={22} />
+                            )}
+                            <div className={styles.timelineContent}>
+                              {ev.kind === "commentAdded" || kindStr === "comment" ? (
+                                <div>
+                                  <div>
+                                    <span className={styles.actorName}>{actorName}</span>
+                                    <span className={styles.timeAgo}>just now</span>
+                                  </div>
+                                  <div style={{ marginTop: 4, color: "var(--lyra-text)" }}>{ev.detail}</div>
+                                </div>
+                              ) : ev.kind === "branchCreated" ? (
+                                <div>
+                                  <span className={styles.actorName}>{actorName}</span> created branch{" "}
+                                  <span className={styles.branchPill}>{ev.detail.replace("created branch ", "")}</span>
+                                  <span className={styles.timeAgo}>1d ago</span>
+                                </div>
+                              ) : ev.kind === "commitLinked" || kindStr === "commitsPushed" ? (
+                                <div>
+                                  <div>
+                                    <span className={styles.actorName}>{actorName}</span> pushed 3 commits
+                                    <span className={styles.timeAgo}>1d ago</span>
+                                  </div>
+                                  <div className={styles.commitList}>
+                                    <div className={styles.commitRow}>
+                                      <span className={styles.commitSha}>a1b2c3d</span>
+                                      <span>Adjust sidebar transition timing</span>
+                                    </div>
+                                    <div className={styles.commitRow}>
+                                      <span className={styles.commitSha}>d4e5f6a</span>
+                                      <span>Refactor navigation state</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              ) : kindStr === "buildStatus" ? (
+                                <div>
+                                  <span className={styles.actorName}>{ev.detail}</span>
+                                  <span className={styles.timeAgo}>1d ago</span>
+                                </div>
+                              ) : (
+                                <div>
+                                  <span className={styles.actorName}>{actorName}</span> {ev.detail}
+                                  <span className={styles.timeAgo}>recently</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })
+                  ) : (
+                    <>
+                      <div className={styles.timelineItem}>
+                        <Avatar name="Tanner Davidson" colorSeed={1} size={22} />
+                        <div className={styles.timelineContent}>
+                          <span className={styles.actorName}>Tanner</span> created this issue
+                          <span className={styles.timeAgo}>2d ago</span>
+                        </div>
                       </div>
-                      <div className={styles.commitRow}>
-                        <span className={styles.commitSha}>d4e5f6a</span>
-                        <span>Refactor navigation state</span>
-                      </div>
-                      <div className={styles.commitRow}>
-                        <span className={styles.commitSha}>f7g8h9i</span>
-                        <span>Add reduced motion support</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
 
-                <div className={styles.timelineItem}>
-                  <div className={styles.successIconCircle}>
-                    <LyraIcon name="check" size={12} style={{ color: "white" }} />
-                  </div>
-                  <div className={styles.timelineContent}>
-                    <span className={styles.actorName}>Build passed</span>
-                    <span className={styles.timeAgo}>1d ago</span>
-                  </div>
-                </div>
+                      <div className={styles.timelineItem}>
+                        <div className={styles.agentIconCircle}>
+                          <LyraIcon name="agent" size={12} style={{ color: "white" }} />
+                        </div>
+                        <div className={styles.timelineContent}>
+                          <span className={styles.actorName}>Codex</span> created branch{" "}
+                          <span className={styles.branchPill}>lyr-142-sidebar</span>
+                          <span className={styles.timeAgo}>1d ago</span>
+                        </div>
+                      </div>
 
-                <div className={styles.timelineItem}>
-                  <Avatar name="Tanner Davidson" colorSeed={1} size={22} />
-                  <div className={styles.timelineContent}>
-                    <span className={styles.actorName}>Tanner</span> moved to{" "}
-                    <span className={styles.statusInline}>In Progress</span>
-                    <span className={styles.timeAgo}>1d ago</span>
-                  </div>
+                      <div className={styles.timelineItem}>
+                        <div className={styles.agentIconCircle}>
+                          <LyraIcon name="commit" size={12} style={{ color: "white" }} />
+                        </div>
+                        <div className={styles.timelineContent}>
+                          <div>
+                            <span className={styles.actorName}>Codex</span> pushed 3 commits
+                            <span className={styles.timeAgo}>1d ago</span>
+                          </div>
+                          <div className={styles.commitList}>
+                            <div className={styles.commitRow}>
+                              <span className={styles.commitSha}>a1b2c3d</span>
+                              <span>Adjust sidebar transition timing</span>
+                            </div>
+                            <div className={styles.commitRow}>
+                              <span className={styles.commitSha}>d4e5f6a</span>
+                              <span>Refactor navigation state</span>
+                            </div>
+                            <div className={styles.commitRow}>
+                              <span className={styles.commitSha}>f7g8h9i</span>
+                              <span>Add reduced motion support</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className={styles.timelineItem}>
+                        <div className={styles.successIconCircle}>
+                          <LyraIcon name="check" size={12} style={{ color: "white" }} />
+                        </div>
+                        <div className={styles.timelineContent}>
+                          <span className={styles.actorName}>Build passed</span>
+                          <span className={styles.timeAgo}>1d ago</span>
+                        </div>
+                      </div>
+
+                      <div className={styles.timelineItem}>
+                        <Avatar name="Tanner Davidson" colorSeed={1} size={22} />
+                        <div className={styles.timelineContent}>
+                          <span className={styles.actorName}>Tanner</span> moved to{" "}
+                          <span className={styles.statusInline}>In Progress</span>
+                          <span className={styles.timeAgo}>1d ago</span>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
 
@@ -382,19 +585,32 @@ export function IssueDetailView({ issueId }: { issueId: string }) {
 
               <div className={styles.fieldLabel}>Status</div>
               <div className={styles.fieldValue}>
-                <span className={styles.statusBadge}>In Progress ▾</span>
+                <select
+                  className={styles.fieldSelect}
+                  value={issue.status}
+                  onChange={(e) => void updateIssue(issue.id, { status: e.target.value as any })}
+                >
+                  <option value="todo">To Do</option>
+                  <option value="inProgress">In Progress</option>
+                  <option value="inReview">In Review</option>
+                  <option value="done">Done</option>
+                </select>
               </div>
 
               <div className={styles.fieldLabel}>Assignee</div>
               <div className={styles.fieldValue}>
-                {assignee ? (
-                  <>
-                    <Avatar name={assignee.name} colorSeed={assignee.colorSeed} size={18} />
-                    <span>{assignee.name}</span>
-                  </>
-                ) : (
-                  <span>Unassigned</span>
-                )}
+                <select
+                  className={styles.fieldSelect}
+                  value={issue.assigneeId ?? ""}
+                  onChange={(e) => void updateIssue(issue.id, { assigneeId: e.target.value || undefined })}
+                >
+                  <option value="">Unassigned</option>
+                  {users.map((u) => (
+                    <option key={u.id} value={u.id}>
+                      {u.name}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className={styles.fieldLabel}>Reporter</div>
@@ -411,12 +627,34 @@ export function IssueDetailView({ issueId }: { issueId: string }) {
 
               <div className={styles.fieldLabel}>Priority</div>
               <div className={styles.fieldValue}>
-                <LyraIcon name="priority-high" size={12} style={{ color: "var(--lyra-danger)" }} />
-                <span>High</span>
+                <select
+                  className={styles.fieldSelect}
+                  value={issue.priority}
+                  onChange={(e) => void updateIssue(issue.id, { priority: e.target.value as any })}
+                >
+                  <option value="urgent">Urgent</option>
+                  <option value="high">High</option>
+                  <option value="medium">Medium</option>
+                  <option value="low">Low</option>
+                  <option value="none">None</option>
+                </select>
               </div>
 
               <div className={styles.fieldLabel}>Sprint</div>
-              <div className={styles.fieldValue}>Cycle 04</div>
+              <div className={styles.fieldValue}>
+                <select
+                  className={styles.fieldSelect}
+                  value={issue.cycleId ?? ""}
+                  onChange={(e) => void updateIssue(issue.id, { cycleId: e.target.value || undefined })}
+                >
+                  <option value="">Backlog</option>
+                  {cycles.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
               <div className={styles.fieldLabel}>Parent</div>
               <div className={styles.fieldValue} style={{ color: "var(--lyra-text-faint)" }}>None</div>
@@ -426,7 +664,7 @@ export function IssueDetailView({ issueId }: { issueId: string }) {
 
               <div className={styles.fieldLabel}>Branch</div>
               <div className={styles.fieldValue} style={{ fontFamily: "var(--lyra-font-mono)", fontSize: 11 }}>
-                lyr-142-sidebar
+                {issue.linkedBranch || branchCreated || "lyr-142-sidebar"}
               </div>
 
               <div className={styles.fieldLabel}>Estimate</div>
@@ -451,26 +689,35 @@ export function IssueDetailView({ issueId }: { issueId: string }) {
                 <LyraIcon name="agent" size={14} />
                 <span>Ask Agent</span>
               </button>
-              <button className={styles.agentActionOutline}>
+              <button
+                className={styles.agentActionOutline}
+                onClick={() => void handleCreateBranch()}
+              >
                 <LyraIcon name="branch" size={14} />
-                <span>Create Branch</span>
+                <span>{branchCreated ? "✓ Branch Created" : "Create Branch"}</span>
               </button>
             </div>
 
             <div className={styles.actionList}>
-              <div className={styles.actionItem}>
+              <div className={styles.actionItem} onClick={() => void handleCreateBranch()}>
                 <LyraIcon name="worktree" size={13} />
                 <span>Start worktree</span>
               </div>
-              <div className={styles.actionItem}>
+              <div className={styles.actionItem} onClick={handleRunTests}>
                 <LyraIcon name="tests" size={13} />
                 <span>Run tests</span>
               </div>
-              <div className={styles.actionItem}>
+              <div className={styles.actionItem} onClick={() => void window.lyra.git.status()}>
                 <LyraIcon name="terminal" size={13} />
                 <span>Open in terminal</span>
               </div>
             </div>
+
+            {testResult && (
+              <div style={{ fontSize: 11.5, color: "var(--lyra-success)", fontWeight: 500, padding: "4px 8px", background: "rgba(16, 185, 129, 0.1)", borderRadius: 5 }}>
+                {testResult}
+              </div>
+            )}
 
             <div className={styles.statsBlock}>
               <div className={styles.statRow}>

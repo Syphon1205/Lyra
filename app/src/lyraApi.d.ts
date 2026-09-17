@@ -148,7 +148,24 @@ export interface LyraApi {
     logout(): Promise<{ success: boolean; error?: string }>;
     listRepos(): Promise<GitHubRepo[]>;
     listPRs(repo?: string): Promise<GitHubPR[]>;
+    contributors(localRepoPath?: string): Promise<{ name: string; email: string; avatarUrl?: string; username?: string }[]>;
     openWeb(url: string): Promise<void>;
+  };
+  system: {
+    pickDirectory(): Promise<string | null>;
+    openTerminal(dir?: string): Promise<void>;
+  };
+  data: {
+    databaseInfo(): Promise<{
+      path: string;
+      sizeBytes: number;
+      issueCount: number;
+      projectCount: number;
+      chatSessionCount: number;
+    }>;
+    export(): Promise<string>;
+    reset(): Promise<{ success: boolean; error?: string }>;
+    seedSampleData(user?: { name: string; email: string; avatarUrl?: string; username?: string }): Promise<{ success: boolean; error?: string }>;
   };
   git: {
     status(dir?: string): Promise<GitStatusResult>;
@@ -169,7 +186,11 @@ export interface LyraApi {
     listSessions(issueId?: ID): Promise<ChatSessionRecord[]>;
     createSession(input: { title: string; issueId?: ID; providerId: AgentProviderId }): Promise<ChatSessionRecord>;
     getSession(id: ID): Promise<ChatSessionRecord | undefined>;
-    sendMessage(sessionId: ID, text: string): Promise<ChatMessageRecord>;
+    sendMessage(
+      sessionId: ID,
+      text: string,
+      options?: { model?: string; reasoningEffort?: string; repoPath?: string; providerId?: AgentProviderId }
+    ): Promise<ChatMessageRecord>;
     cancelRun(sessionId: ID): Promise<void>;
     archiveSession(id: ID, archived: boolean): Promise<void>;
     deleteSession(id: ID): Promise<void>;

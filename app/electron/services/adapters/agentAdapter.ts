@@ -7,6 +7,9 @@ export interface AgentRunRequest {
   runId: string;
   prompt: string;
   cwd: string;
+  model?: string;
+  reasoningEffort?: string;
+  customExecutablePath?: string;
   /** A previously-seen provider session id, if this adapter supports resume. */
   resumeSessionId?: string;
 }
@@ -19,7 +22,7 @@ export interface AgentAdapter {
   readonly id: AgentProviderId;
   readonly displayName: string;
 
-  detect(): Promise<AgentAdapterDescriptor>;
+  detect(customPath?: string): Promise<AgentAdapterDescriptor>;
 
   /** Starts a run; events (including run.completed/run.failed) are delivered via onEvent. */
   start(request: AgentRunRequest, onEvent: (event: AgentRunEvent) => void): { cancel: () => void };

@@ -74,6 +74,16 @@ export function Backlog({ projectId }: { projectId: string }) {
     setAddingToCycle(null);
   };
 
+  const completeCycle = useLyraStore((s) => s.completeCycle);
+  const [sprintCompleted, setSprintCompleted] = useState(false);
+
+  const handleCompleteSprint = async () => {
+    if (cycle04) {
+      await completeCycle(cycle04.id);
+      setSprintCompleted(true);
+    }
+  };
+
   return (
     <div className={`${styles.container} lyra-scroll`}>
       {/* Backlog Header Bar */}
@@ -93,8 +103,12 @@ export function Backlog({ projectId }: { projectId: string }) {
         </div>
 
         <div className={styles.headerRight}>
-          <button className={styles.completeSprintBtn}>
-            Complete sprint
+          <button
+            className={styles.completeSprintBtn}
+            onClick={handleCompleteSprint}
+            style={sprintCompleted ? { background: "var(--lyra-card)", color: "var(--lyra-success)" } : undefined}
+          >
+            {sprintCompleted ? "✓ Sprint Completed" : "Complete sprint"}
           </button>
           <button className={styles.iconBtn} title="Sprint options">
             <LyraIcon name="overflow" size={15} />
@@ -167,6 +181,32 @@ export function Backlog({ projectId }: { projectId: string }) {
             ) : (
               cycle05Issues.map((issue) => <BacklogRow key={issue.id} issue={issue} />)
             )}
+
+            {addingToCycle === "c5" ? (
+              <div className={styles.inlineCreate}>
+                <input
+                  autoFocus
+                  placeholder="What needs to be done?"
+                  value={newIssueTitle}
+                  onChange={(e) => setNewIssueTitle(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleCreate(cycle05?.id);
+                    if (e.key === "Escape") setAddingToCycle(null);
+                  }}
+                />
+                <button className={styles.createBtn} onClick={() => handleCreate(cycle05?.id)}>
+                  Add
+                </button>
+                <button className={styles.cancelBtn} onClick={() => setAddingToCycle(null)}>
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <button className={styles.addIssueBtn} onClick={() => setAddingToCycle("c5")}>
+                <LyraIcon name="plus" size={12} />
+                <span>Add issue</span>
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -184,6 +224,32 @@ export function Backlog({ projectId }: { projectId: string }) {
               <div className={styles.empty}>12 issues in general backlog.</div>
             ) : (
               unscheduled.map((issue) => <BacklogRow key={issue.id} issue={issue} />)
+            )}
+
+            {addingToCycle === "backlog" ? (
+              <div className={styles.inlineCreate}>
+                <input
+                  autoFocus
+                  placeholder="What needs to be done?"
+                  value={newIssueTitle}
+                  onChange={(e) => setNewIssueTitle(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleCreate(undefined);
+                    if (e.key === "Escape") setAddingToCycle(null);
+                  }}
+                />
+                <button className={styles.createBtn} onClick={() => handleCreate(undefined)}>
+                  Add
+                </button>
+                <button className={styles.cancelBtn} onClick={() => setAddingToCycle(null)}>
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <button className={styles.addIssueBtn} onClick={() => setAddingToCycle("backlog")}>
+                <LyraIcon name="plus" size={12} />
+                <span>Add issue</span>
+              </button>
             )}
           </div>
         )}

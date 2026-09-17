@@ -66,10 +66,23 @@ interface LyraState {
   preferences: Record<string, unknown>;
   githubStatus: GitHubStatus | null;
   githubRepos: GitHubRepo[];
+  contributors: { name: string; email: string; avatarUrl?: string; username?: string }[];
   gitStatus: GitStatusResult | null;
   gitBranches: GitBranchResult | null;
   gitCommits: GitCommitResult[];
   gitDiff: string;
+
+  sidebarWidth: number;
+  companionWidth: number;
+  isSidebarCollapsed: boolean;
+  isCompanionWide: boolean;
+  onboardingCompleted: boolean;
+  activeChatOptions: {
+    model?: string;
+    reasoningEffort?: string;
+    repoPath?: string;
+    providerId?: AgentProviderId;
+  };
 
   selection: SidebarSelection;
   projectTab: ProjectTab;
@@ -96,6 +109,18 @@ interface LyraState {
   setTypeFilter(v: IssueType | null): void;
   setSprintFilter(v: ID | null): void;
   clearFilters(): void;
+
+  setSidebarWidth(width: number): void;
+  setCompanionWidth(width: number): void;
+  setSidebarCollapsed(collapsed: boolean): void;
+  toggleSidebarCollapsed(): void;
+  toggleCompanionWide(): void;
+  setOnboardingCompleted(completed: boolean): Promise<void>;
+  loadContributors(repoPath?: string): Promise<void>;
+  setActiveChatOptions(opts: Partial<{ model?: string; reasoningEffort?: string; repoPath?: string; providerId?: AgentProviderId }>): void;
+  refreshAdapters(): Promise<void>;
+  resetDatabase(): Promise<void>;
+  seedDemoData(user?: { name: string; email: string; avatarUrl?: string; username?: string }): Promise<void>;
 
   openIssueDetail(id: ID): void;
   closeCompanionPanel(): void;
@@ -149,7 +174,11 @@ interface LyraState {
 
   openChatForIssue(issueId: ID, providerId?: AgentProviderId): Promise<void>;
   openGeneralChat(providerId?: AgentProviderId): Promise<void>;
-  sendChatMessage(sessionId: ID, text: string): Promise<void>;
+  sendChatMessage(
+    sessionId: ID,
+    text: string,
+    options?: { model?: string; reasoningEffort?: string; repoPath?: string; providerId?: AgentProviderId }
+  ): Promise<void>;
   cancelChatRun(sessionId: ID): Promise<void>;
   refreshSession(sessionId: ID): Promise<void>;
   detachChat(sessionId: ID): void;
@@ -178,10 +207,18 @@ export const useLyraStore = create<LyraState>((set, get) => ({
   preferences: {},
   githubStatus: null,
   githubRepos: [],
+  contributors: [],
   gitStatus: null,
   gitBranches: null,
   gitCommits: [],
   gitDiff: "",
+
+  sidebarWidth: 240,
+  companionWidth: 420,
+  isSidebarCollapsed: false,
+  isCompanionWide: false,
+  onboardingCompleted: true,
+  activeChatOptions: {},
 
   selection: { kind: "project", projectId: "" },
   projectTab: "board",
@@ -218,6 +255,7 @@ export const useLyraStore = create<LyraState>((set, get) => ({
       gitBranches,
       gitCommits,
       gitDiff,
+      contributors,
     ] = await Promise.all([
       window.lyra.workspace.get(),
       window.lyra.issues.list(),
@@ -237,6 +275,7 @@ export const useLyraStore = create<LyraState>((set, get) => ({
       window.lyra.git.branches().catch(() => null),
       window.lyra.git.commits(20).catch(() => []),
       window.lyra.git.diff().catch(() => ""),
+      window.lyra.github.contributors().catch(() => []),
     ]);
 
     let githubRepos: GitHubRepo[] = [];
@@ -277,6 +316,14 @@ export const useLyraStore = create<LyraState>((set, get) => ({
       document.documentElement.style.setProperty("--lyra-accent", savedAccent);
     }
 
+    const savedSidebarWidth = Number(preferences?.sidebar_width) || 240;
+    const savedCompanionWidth = Number(preferences?.companion_width) || 420;
+    const savedSidebarCollapsed = preferences?.sidebar_collapsed === "true" || preferences?.sidebar_collapsed === true;
+    const savedOnboardingCompleted =
+      preferences?.onboarding_completed !== undefined
+        ? preferences.onboarding_completed === "true" || preferences.onboarding_completed === true
+        : issues.length > 0;
+
     set({
       loaded: true,
       workspace,
@@ -298,10 +345,15 @@ export const useLyraStore = create<LyraState>((set, get) => ({
       preferences: preferences ?? {},
       githubStatus,
       githubRepos,
+      contributors,
       gitStatus,
       gitBranches,
       gitCommits,
       gitDiff,
+      sidebarWidth: Math.min(Math.max(savedSidebarWidth, 180), 480),
+      companionWidth: Math.min(Math.max(savedCompanionWidth, 320), 760),
+      isSidebarCollapsed: savedSidebarCollapsed,
+      onboardingCompleted: savedOnboardingCompleted,
       density: savedDensity ?? "comfortable",
       selection: firstProject ? { kind: "project", projectId: firstProject.id } : { kind: "forYou" },
     });
@@ -322,6 +374,46 @@ export const useLyraStore = create<LyraState>((set, get) => ({
   setSprintFilter: (v) => set({ sprintFilter: v }),
   clearFilters: () => set({ searchText: "", assigneeFilter: null, epicFilter: null, statusFilter: null, typeFilter: null, sprintFilter: null }),
   setDensity: (density) => set({ density }),
+
+  setSidebarWidth: (width) => {
+    set({ sidebarWidth: width });
+    void get().savePreference("sidebar_width", width);
+  },
+  setCompanionWidth: (width) => {
+    set({ companionWidth: width });
+    void get().savePreference("companion_width", width);
+  },
+  setSidebarCollapsed: (collapsed) => {
+    set({ isSidebarCollapsed: collapsed });
+    void get().savePreference("sidebar_collapsed", collapsed);
+  },
+  toggleSidebarCollapsed: () => {
+    const next = !get().isSidebarCollapsed;
+    set({ isSidebarCollapsed: next });
+    void get().savePreference("sidebar_collapsed", next);
+  },
+  toggleCompanionWide: () => set((s) => ({ isCompanionWide: !s.isCompanionWide })),
+  setOnboardingCompleted: async (completed) => {
+    set({ onboardingCompleted: completed });
+    await get().savePreference("onboarding_completed", completed);
+  },
+  loadContributors: async (repoPath) => {
+    const contribs = await window.lyra.github.contributors(repoPath).catch(() => []);
+    set({ contributors: contribs });
+  },
+  setActiveChatOptions: (opts) => set((s) => ({ activeChatOptions: { ...s.activeChatOptions, ...opts } })),
+  refreshAdapters: async () => {
+    const adapters = await window.lyra.agents.listAdapters();
+    set({ adapters });
+  },
+  resetDatabase: async () => {
+    await window.lyra.data.reset();
+    await get().load();
+  },
+  seedDemoData: async (user) => {
+    await window.lyra.data.seedSampleData(user);
+    await get().load();
+  },
 
   openIssueDetail: (id) => {
     set((s) => ({
@@ -394,8 +486,9 @@ export const useLyraStore = create<LyraState>((set, get) => ({
     set((s) => ({ chatSessions: { ...s.chatSessions, [session.id]: session }, companionPanel: { kind: "agentChat", sessionId: session.id } }));
   },
 
-  async sendChatMessage(sessionId, text) {
-    await window.lyra.chat.sendMessage(sessionId, text);
+  async sendChatMessage(sessionId, text, options) {
+    const opts = options ?? get().activeChatOptions;
+    await window.lyra.chat.sendMessage(sessionId, text, opts);
     await get().refreshSession(sessionId);
   },
 

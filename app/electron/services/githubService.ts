@@ -209,4 +209,34 @@ export class GitHubService {
       await shell.openExternal(url);
     }
   }
+
+  async getContributors(localRepoPath?: string): Promise<{ name: string; email: string; avatarUrl?: string }[]> {
+    const contributors: Map<string, { name: string; email: string }> = new Map();
+    const repoPath = localRepoPath || process.cwd();
+    try {
+      const { stdout } = await execFileAsync("git", ["log", "-n", "100", "--format=%an|%ae"], {
+        cwd: repoPath,
+        encoding: "utf8",
+      });
+      const lines = stdout.split("\n");
+      for (const line of lines) {
+        const [name, email] = line.split("|");
+        if (name && email && !contributors.has(email)) {
+          contributors.set(email, { name: name.trim(), email: email.trim() });
+        }
+      }
+    } catch {
+      // fallback
+    }
+
+    const auth = await this.getAuthStatus();
+    if (auth.authenticated && auth.user) {
+      contributors.set(auth.user.login, {
+        name: auth.user.name || auth.user.login,
+        email: `${auth.user.login}@github.com`,
+      });
+    }
+
+    return Array.from(contributors.values());
+  }
 }

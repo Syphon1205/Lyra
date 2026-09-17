@@ -12,15 +12,17 @@ import { SettingsModal } from "./SettingsModal";
 import { IssueDetailView } from "./IssueDetail/IssueDetailView";
 import { AgentsView } from "./Agents/AgentsView";
 import { SettingsView } from "./Settings/SettingsView";
+import { OnboardingView } from "./Onboarding/OnboardingView";
 import { AppIcon } from "./AppIcon";
 import { Avatar } from "./Avatar";
 import styles from "./AppShell.module.css";
 
 export function AppShell() {
-  const [sidebarVisible, setSidebarVisible] = useState(true);
   const [composerOpen, setComposerOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [isDraggingSidebar, setIsDraggingSidebar] = useState(false);
+  const [isDraggingCompanion, setIsDraggingCompanion] = useState(false);
 
   const selection = useLyraStore((s) => s.selection);
   const companionPanel = useLyraStore((s) => s.companionPanel);
@@ -28,6 +30,14 @@ export function AppShell() {
   const currentUserId = useLyraStore((s) => s.currentUserId);
   const recentIssueIds = useLyraStore((s) => s.recentIssueIds);
   const openGeneralChat = useLyraStore((s) => s.openGeneralChat);
+  const sidebarWidth = useLyraStore((s) => s.sidebarWidth);
+  const setSidebarWidth = useLyraStore((s) => s.setSidebarWidth);
+  const companionWidth = useLyraStore((s) => s.companionWidth);
+  const setCompanionWidth = useLyraStore((s) => s.setCompanionWidth);
+  const isSidebarCollapsed = useLyraStore((s) => s.isSidebarCollapsed);
+  const toggleSidebarCollapsed = useLyraStore((s) => s.toggleSidebarCollapsed);
+  const isCompanionWide = useLyraStore((s) => s.isCompanionWide);
+  const onboardingCompleted = useLyraStore((s) => s.onboardingCompleted);
 
   useEffect(() => {
     const offNewIssue = window.lyra.menu.onNewIssue(() => setComposerOpen(true));
@@ -55,6 +65,10 @@ export function AppShell() {
         setComposerOpen(false);
         setSettingsOpen(false);
       }
+      if (e.key === "\\" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        toggleSidebarCollapsed();
+      }
       if (e.key === "," && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
         useLyraStore.getState().setSelection({ kind: "settings" });
@@ -62,14 +76,79 @@ export function AppShell() {
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
+  }, [toggleSidebarCollapsed]);
+
+  const startSidebarDrag = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsDraggingSidebar(true);
+    const startX = e.clientX;
+    const startW = sidebarWidth;
+    const onMouseMove = (ev: MouseEvent) => {
+      const delta = ev.clientX - startX;
+      const newW = Math.min(Math.max(startW + delta, 180), 480);
+      setSidebarWidth(newW);
+    };
+    const onMouseUp = () => {
+      setIsDraggingSidebar(false);
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+    };
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+  };
+
+  const startCompanionDrag = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsDraggingCompanion(true);
+    const startX = e.clientX;
+    const startW = isCompanionWide ? 680 : companionWidth;
+    const onMouseMove = (ev: MouseEvent) => {
+      const delta = startX - ev.clientX;
+      const newW = Math.min(Math.max(startW + delta, 320), 760);
+      setCompanionWidth(newW);
+    };
+    const onMouseUp = () => {
+      setIsDraggingCompanion(false);
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+    };
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+  };
+
+  const isCompanionOpen = companionPanel.kind !== "none";
+  const effectiveCompanionWidth = isCompanionWide ? 680 : companionWidth;
 
   return (
     <div className={styles.root}>
       <div className={styles.desktopBackdrop} />
-      {sidebarVisible && <Sidebar onOpenSettings={() => useLyraStore.getState().setSelection({ kind: "settings" })} />}
+
+      {/* Resizable Sidebar Container */}
+      <div
+        className={styles.sidebarWrap}
+        style={{
+          width: isSidebarCollapsed ? 0 : sidebarWidth,
+          opacity: isSidebarCollapsed ? 0 : 1,
+          pointerEvents: isSidebarCollapsed ? "none" : "auto",
+        }}
+      >
+        <Sidebar onOpenSettings={() => useLyraStore.getState().setSelection({ kind: "settings" })} />
+        {!isSidebarCollapsed && (
+          <div
+            className={`${styles.sidebarResizer} ${isDraggingSidebar ? styles.sidebarResizerActive : ""}`}
+            onMouseDown={startSidebarDrag}
+            onDoubleClick={() => setSidebarWidth(240)}
+            title="Drag to resize sidebar (double-click to reset)"
+          />
+        )}
+      </div>
+
       <div className={styles.main}>
-        <TopBar onToggleSidebar={() => setSidebarVisible((v) => !v)} onOpenComposer={() => setComposerOpen(true)} onOpenPalette={() => setPaletteOpen(true)} />
+        <TopBar
+          onToggleSidebar={toggleSidebarCollapsed}
+          onOpenComposer={() => setComposerOpen(true)}
+          onOpenPalette={() => setPaletteOpen(true)}
+        />
         <div className={styles.contentRow}>
           <div className={styles.center}>
             {selection.kind === "project" && <ProjectView projectId={selection.projectId} />}
@@ -104,14 +183,33 @@ export function AppShell() {
             {selection.kind === "settings" && <SettingsView />}
           </div>
 
-          {companionPanel.kind === "issueDetail" && <IssuePanel issueId={companionPanel.issueId} />}
-          {companionPanel.kind === "agentChat" && <ChatPanel sessionId={companionPanel.sessionId} />}
+          {/* Resizable & Smooth Sliding Companion Panel */}
+          <div
+            className={styles.companionWrap}
+            style={{
+              width: isCompanionOpen ? effectiveCompanionWidth : 0,
+              opacity: isCompanionOpen ? 1 : 0,
+              pointerEvents: isCompanionOpen ? "auto" : "none",
+            }}
+          >
+            {isCompanionOpen && (
+              <div
+                className={`${styles.companionResizer} ${isDraggingCompanion ? styles.companionResizerActive : ""}`}
+                onMouseDown={startCompanionDrag}
+                onDoubleClick={() => setCompanionWidth(420)}
+                title="Drag to resize panel (double-click to reset)"
+              />
+            )}
+            {companionPanel.kind === "issueDetail" && <IssuePanel issueId={companionPanel.issueId} />}
+            {companionPanel.kind === "agentChat" && <ChatPanel sessionId={companionPanel.sessionId} />}
+          </div>
         </div>
       </div>
 
       {composerOpen && <IssueComposer onClose={() => setComposerOpen(false)} />}
       {paletteOpen && <CommandPalette onClose={() => setPaletteOpen(false)} onOpenComposer={() => setComposerOpen(true)} />}
       {settingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} />}
+      {!onboardingCompleted && <OnboardingView />}
     </div>
   );
 }

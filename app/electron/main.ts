@@ -1,10 +1,10 @@
-import { app, BrowserWindow, ipcMain, nativeTheme, Menu, shell } from "electron";
+import { app, BrowserWindow, ipcMain, nativeTheme, Menu, shell, dialog } from "electron";
 import path from "node:path";
 import fs from "node:fs";
 import { fileURLToPath } from "node:url";
 import { z } from "zod";
 import { openDatabase } from "./services/database.js";
-import { seedIfEmpty } from "./services/seed.js";
+import { seedIfEmpty, seedDemoFixtures } from "./services/seed.js";
 import { IssueService } from "./services/issueService.js";
 import { CatalogService } from "./services/catalogService.js";
 import { ChatService } from "./services/chatService.js";
@@ -15,6 +15,7 @@ import { ClaudeCodeAdapter } from "./services/adapters/claudeCodeAdapter.js";
 import { CodexAdapter } from "./services/adapters/codexAdapter.js";
 import { OpenCodeAdapter } from "./services/adapters/opencodeAdapter.js";
 import { GeminiAdapter } from "./services/adapters/geminiAdapter.js";
+import { KiloAdapter } from "./services/adapters/kiloAdapter.js";
 import type { AgentAdapter } from "./services/adapters/agentAdapter.js";
 import { IPC } from "../shared/ipc.js";
 import type { AgentProviderId } from "../shared/agentEvents.js";
@@ -35,6 +36,7 @@ const adapters = new Map<AgentProviderId, AgentAdapter>([
   ["codex", new CodexAdapter()],
   ["opencode", new OpenCodeAdapter()],
   ["gemini", new GeminiAdapter()],
+  ["kilo", new KiloAdapter()],
 ]);
 
 function repoPathForActiveProject(): string {
@@ -345,11 +347,26 @@ handle(IPC.activityList, idSchema, (issueId) => issueService.activityFor(issueId
 handle(IPC.chatListSessions, z.object({ issueId: idSchema.optional() }).optional(), (input) => chatService.listSessions(input?.issueId));
 handle(
   IPC.chatCreateSession,
-  z.object({ title: z.string(), issueId: idSchema.optional(), providerId: z.enum(["claude-code", "codex", "opencode", "gemini"]) }),
+  z.object({ title: z.string(), issueId: idSchema.optional(), providerId: z.enum(["claude-code", "codex", "opencode", "gemini", "kilo"]) }),
   (input) => chatService.createSession(input)
 );
 handle(IPC.chatGetSession, idSchema, (id) => chatService.getSession(id));
-handle(IPC.chatSendMessage, z.object({ sessionId: idSchema, text: z.string().min(1) }), (input) => chatService.sendMessage(input.sessionId, input.text));
+handle(
+  IPC.chatSendMessage,
+  z.object({
+    sessionId: idSchema,
+    text: z.string().min(1),
+    options: z
+      .object({
+        model: z.string().optional(),
+        reasoningEffort: z.string().optional(),
+        repoPath: z.string().optional(),
+        providerId: z.enum(["claude-code", "codex", "opencode", "gemini", "kilo"]).optional(),
+      })
+      .optional(),
+  }),
+  (input) => chatService.sendMessage(input.sessionId, input.text, input.options)
+);
 handle(IPC.chatCancelRun, idSchema, (id) => chatService.cancelRun(id));
 handle(IPC.chatArchiveSession, z.object({ id: idSchema, archived: z.boolean() }), (input) => chatService.archiveSession(input.id, input.archived));
 handle(IPC.chatDeleteSession, idSchema, (id) => chatService.deleteSession(id));
@@ -357,9 +374,69 @@ handle(IPC.chatRenameSession, z.object({ id: idSchema, title: z.string().min(1) 
 
 handle(IPC.agentsListAdapters, z.undefined(), async () => {
   const list = [];
-  for (const adapter of adapters.values()) list.push(await adapter.detect());
+  for (const adapter of adapters.values()) {
+    const customPath = preferenceService.get(`agent_path_${adapter.id}`) as string | undefined;
+    list.push(await adapter.detect(customPath));
+  }
   return list;
 });
+
+handle(IPC.githubContributors, z.undefined(), () => githubService.getContributors(repoPathForActiveProject()));
+
+handle(IPC.systemPickDirectory, z.undefined(), async () => {
+  const res = await dialog.showOpenDialog({
+    properties: ["openDirectory", "createDirectory"],
+    title: "Select Repository or Project Folder",
+  });
+  return res.filePaths[0];
+});
+
+handle(IPC.systemOpenTerminal, z.string().optional(), async (targetDir) => {
+  const dir = targetDir || repoPathForActiveProject();
+  if (process.platform === "darwin") {
+    const { execFile } = await import("node:child_process");
+    execFile("open", ["-a", "Terminal", dir]);
+  } else {
+    shell.openPath(dir);
+  }
+});
+
+handle(IPC.dataDatabaseInfo, z.undefined(), () => {
+  const dir = app.getPath("userData");
+  const dbPath = path.join(dir, "lyra.sqlite3");
+  const stats = fs.existsSync(dbPath) ? fs.statSync(dbPath) : null;
+  return { path: dbPath, sizeBytes: stats?.size ?? 0 };
+});
+
+handle(IPC.dataExport, z.undefined(), () => {
+  const exportData = {
+    issues: issueService.list(),
+    projects: catalogService.projects(),
+    users: catalogService.users(),
+    preferences: preferenceService.getAll(),
+  };
+  return JSON.stringify(exportData, null, 2);
+});
+
+handle(IPC.dataReset, z.undefined(), () => {
+  const dir = app.getPath("userData");
+  const dbPath = path.join(dir, "lyra.sqlite3");
+  try {
+    if (fs.existsSync(dbPath)) fs.unlinkSync(dbPath);
+  } catch {}
+  app.relaunch();
+  app.exit(0);
+});
+
+handle(
+  IPC.seedSampleData,
+  z.object({ id: z.string().optional(), name: z.string().optional(), email: z.string().optional() }).optional(),
+  (user) => {
+    seedDemoFixtures(db, user);
+    preferenceService.set("onboarding_completed", "true");
+    return true;
+  }
+);
 
 handle(IPC.appearanceGet, z.undefined(), () => ({ mode: appearanceMode, isDark: effectiveIsDark(), reducedTransparency: nativeTheme.shouldUseHighContrastColors }));
 handle(IPC.appearanceSet, z.enum(["system", "light", "dark"]), (mode) => {
@@ -405,14 +482,31 @@ async function runCaptureWorkflow(win: BrowserWindow) {
   const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
   win.webContents.on("did-finish-load", async () => {
-    console.log("[capture] Window did finish load. Waiting 2s for React and SQLite state...");
-    await sleep(2000);
+    console.log("[capture] Window did finish load. Waiting for React and SQLite store to be loaded...");
+    await win.webContents.executeJavaScript(`
+      new Promise((resolve) => {
+        const check = () => {
+          if (window.__store && window.__store.getState().loaded) resolve(true);
+          else setTimeout(check, 50);
+        };
+        check();
+      })
+    `);
+    console.log("[capture] App store loaded successfully!");
+    await sleep(600);
 
     const screens = [
+      {
+        name: "00-onboarding.png",
+        action: `
+          window.__store.setState({ onboardingCompleted: false });
+        `,
+      },
       {
         name: "01-board.png",
         action: `
           const s = window.__store.getState();
+          window.__store.setState({ onboardingCompleted: true });
           const p = s.projects.find(x => x.name.includes("Engineering")) || s.projects[0];
           if (p) s.setSelection({ kind: "project", projectId: p.id });
           s.setProjectTab("board");
@@ -495,6 +589,47 @@ async function runCaptureWorkflow(win: BrowserWindow) {
           if (p) s.setSelection({ kind: "project", projectId: p.id });
           s.setProjectTab("board");
           if (window.__setPaletteOpen) window.__setPaletteOpen(true);
+        `,
+      },
+      {
+        name: "09-timeline.png",
+        action: `
+          const s = window.__store.getState();
+          const p = s.projects.find(x => x.name.includes("Engineering")) || s.projects[0];
+          if (window.__setPaletteOpen) window.__setPaletteOpen(false);
+          s.closeCompanionPanel();
+          if (p) s.setSelection({ kind: "project", projectId: p.id });
+          s.setProjectTab("timeline");
+        `,
+      },
+      {
+        name: "10-components.png",
+        action: `
+          const s = window.__store.getState();
+          const p = s.projects.find(x => x.name.includes("Engineering")) || s.projects[0];
+          s.closeCompanionPanel();
+          if (p) s.setSelection({ kind: "project", projectId: p.id });
+          s.setProjectTab("components");
+        `,
+      },
+      {
+        name: "11-releases.png",
+        action: `
+          const s = window.__store.getState();
+          const p = s.projects.find(x => x.name.includes("Engineering")) || s.projects[0];
+          s.closeCompanionPanel();
+          if (p) s.setSelection({ kind: "project", projectId: p.id });
+          s.setProjectTab("releases");
+        `,
+      },
+      {
+        name: "12-pages.png",
+        action: `
+          const s = window.__store.getState();
+          const p = s.projects.find(x => x.name.includes("Engineering")) || s.projects[0];
+          s.closeCompanionPanel();
+          if (p) s.setSelection({ kind: "project", projectId: p.id });
+          s.setProjectTab("pages");
         `,
       },
     ];

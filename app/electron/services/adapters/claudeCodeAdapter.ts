@@ -25,13 +25,34 @@ export class ClaudeCodeAdapter implements AgentAdapter {
   readonly id = "claude-code" as const;
   readonly displayName = "Claude Code";
 
-  async detect(): Promise<AgentAdapterDescriptor> {
-    const executablePath = await resolveExecutable("claude");
+  async detect(customPath?: string): Promise<AgentAdapterDescriptor> {
+    const executablePath = customPath || (await resolveExecutable("claude"));
+    let version: string | undefined;
+    let available = false;
+    let status: AgentAdapterDescriptor["status"] = "not_found";
+
+    if (executablePath) {
+      available = true;
+      status = "installed_ready";
+      try {
+        const { execFile } = await import("node:child_process");
+        const { promisify } = await import("node:util");
+        const { stdout } = await promisify(execFile)(executablePath, ["--version"], { encoding: "utf8", timeout: 3000 });
+        version = stdout.trim().split("\n")[0];
+      } catch {
+        status = "installed_ready";
+      }
+    }
+
     return {
       id: this.id,
       displayName: this.displayName,
-      available: !!executablePath,
+      status,
+      available,
       executablePath,
+      version,
+      supportedModels: ["claude-3-7-sonnet", "claude-3-5-sonnet", "claude-3-5-haiku"],
+      supportedReasoningEfforts: ["low", "medium", "high"],
       capabilities: {
         streaming: true,
         toolActivity: true,
@@ -60,16 +81,12 @@ export class ClaudeCodeAdapter implements AgentAdapter {
     let canceled = false;
     let proc: RunningProcess | undefined;
 
-    // Resolve the absolute path rather than trusting bare "claude" on
-    // Electron's spawned-process PATH, which on macOS is often a minimal
-    // login-shell PATH that doesn't include a version-manager-installed
-    // executable (nvm, etc.) even when the shell that launched Lyra has it.
-    void resolveExecutable("claude").then((resolved) => {
+    void (async () => {
+      const executable = request.customExecutablePath || (await resolveExecutable("claude")) || "claude";
       if (canceled) return;
-      const executable = resolved ?? "claude";
       proc = new RunningProcess(executable, args, { cwd: request.cwd, timeoutMs: 5 * 60_000 });
       wireEvents(proc, request, onEvent);
-    });
+    })();
 
     return { cancel: () => {
       canceled = true;

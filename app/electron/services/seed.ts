@@ -2,9 +2,12 @@ import type Database from "better-sqlite3";
 import { randomUUID } from "node:crypto";
 
 /**
- * Approved reference fixtures seeded once into SQLite.
+ * Approved reference fixtures seeded for visual tests / capture or user demo selection.
  */
-export function seedIfEmpty(db: Database.Database) {
+export function seedDemoFixtures(
+  db: Database.Database,
+  currentUser?: { id?: string; name?: string; email?: string }
+) {
   const count = (db.prepare("SELECT COUNT(*) as c FROM issues").get() as { c: number }).c;
   if (count > 0) return;
 
@@ -20,7 +23,12 @@ export function seedIfEmpty(db: Database.Database) {
   );
 
   const users = [
-    { id: randomUUID(), name: "Tanner Davidson", email: "tanner@ambient.dev", colorSeed: 1 },
+    {
+      id: currentUser?.id ?? randomUUID(),
+      name: currentUser?.name ?? "Tanner Davidson",
+      email: currentUser?.email ?? "tanner@ambient.dev",
+      colorSeed: 1,
+    },
     { id: randomUUID(), name: "Marcus Lee", email: "marcus@ambient.dev", colorSeed: 3 },
     { id: randomUUID(), name: "Elena Fischer", email: "elena@ambient.dev", colorSeed: 4 },
     { id: randomUUID(), name: "Priya Shah", email: "priya@ambient.dev", colorSeed: 2 },
@@ -355,4 +363,11 @@ export function seedIfEmpty(db: Database.Database) {
       { path: "src/components/SidebarView.tsx", additions: 24, deletions: 8 }
     ])
   );
+}
+
+export function seedIfEmpty(db: Database.Database) {
+  if (process.env.CAPTURE_SCREENS === "1") {
+    seedDemoFixtures(db);
+    db.prepare("INSERT OR REPLACE INTO preferences (key, value) VALUES ('onboarding_completed', 'true')").run();
+  }
 }

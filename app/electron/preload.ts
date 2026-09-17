@@ -58,7 +58,19 @@ const lyra = {
     logout: () => ipcRenderer.invoke(IPC.githubLogout),
     listRepos: () => ipcRenderer.invoke(IPC.githubListRepos),
     listPRs: (repo?: string) => ipcRenderer.invoke(IPC.githubListPRs, repo ? { repo } : undefined),
+    contributors: (localRepoPath?: string) => ipcRenderer.invoke(IPC.githubContributors, localRepoPath ? { localRepoPath } : undefined),
     openWeb: (url: string) => ipcRenderer.invoke(IPC.githubOpenWeb, url),
+  },
+  system: {
+    pickDirectory: () => ipcRenderer.invoke(IPC.systemPickDirectory),
+    openTerminal: (dir?: string) => ipcRenderer.invoke(IPC.systemOpenTerminal, dir),
+  },
+  data: {
+    databaseInfo: () => ipcRenderer.invoke(IPC.dataDatabaseInfo),
+    export: () => ipcRenderer.invoke(IPC.dataExport),
+    reset: () => ipcRenderer.invoke(IPC.dataReset),
+    seedSampleData: (user?: { name: string; email: string; avatarUrl?: string; username?: string }) =>
+      ipcRenderer.invoke(IPC.seedSampleData, user),
   },
   git: {
     status: (dir?: string) => ipcRenderer.invoke(IPC.gitStatus, dir),
@@ -91,7 +103,11 @@ const lyra = {
     listSessions: (issueId?: string) => ipcRenderer.invoke(IPC.chatListSessions, issueId ? { issueId } : undefined),
     createSession: (input: unknown) => ipcRenderer.invoke(IPC.chatCreateSession, input),
     getSession: (id: string) => ipcRenderer.invoke(IPC.chatGetSession, id),
-    sendMessage: (sessionId: string, text: string) => ipcRenderer.invoke(IPC.chatSendMessage, { sessionId, text }),
+    sendMessage: (
+      sessionId: string,
+      text: string,
+      options?: { model?: string; reasoningEffort?: string; repoPath?: string; providerId?: string }
+    ) => ipcRenderer.invoke(IPC.chatSendMessage, { sessionId, text, options }),
     cancelRun: (sessionId: string) => ipcRenderer.invoke(IPC.chatCancelRun, sessionId),
     archiveSession: (id: string, archived: boolean) => ipcRenderer.invoke(IPC.chatArchiveSession, { id, archived }),
     deleteSession: (id: string) => ipcRenderer.invoke(IPC.chatDeleteSession, id),

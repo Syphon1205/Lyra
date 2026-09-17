@@ -1,12 +1,19 @@
 <div align="center">
 
-<img src="assets/app-icon.png" alt="Lyra Icon" width="128" height="128" style="border-radius: 28px; margin-bottom: 16px;" />
+  <a href="https://github.com/Syphon1205/Lyra">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="assets/Lyra-Long.png">
+      <source media="(prefers-color-scheme: light)" srcset="assets/Lyra-Long-dark.png">
+      <img alt="Lyra" src="assets/Lyra-Long.png" width="440" />
+    </picture>
+  </a>
 
-# Lyra
+  <br />
+  <br />
 
-### The Project Management Cockpit for Humans & Coding Agents
+  <p><strong>The Project Management Cockpit for Humans & Coding Agents</strong></p>
 
-**A calm, blazingly fast alternative to Jira and Linear built natively for macOS — featuring deep CLI coding agent integration, local-first SQLite persistence, and liquid glass vibrancy.**
+  <p><em>A calm, blazingly fast alternative to Jira and Linear built natively for macOS — featuring deep CLI coding agent integration, local-first SQLite persistence, and liquid glass vibrancy.</em></p>
 
 [![macOS](https://img.shields.io/badge/platform-macOS%2014%2B-black?logo=apple&style=flat-square)](https://apple.com/macos)
 [![Electron](https://img.shields.io/badge/Electron-33.4-47848F?logo=electron&style=flat-square)](https://www.electronjs.org/)

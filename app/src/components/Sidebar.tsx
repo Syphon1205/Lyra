@@ -16,10 +16,15 @@ export function Sidebar({
   const selection = useLyraStore((s) => s.selection);
   const setSelection = useLyraStore((s) => s.setSelection);
   const projects = useLyraStore((s) => s.projects);
+  const createProject = useLyraStore((s) => s.createProject);
   const workspace = useLyraStore((s) => s.workspace);
   const currentUserId = useLyraStore((s) => s.currentUserId);
   const users = useLyraStore((s) => s.users);
   const currentUser = users.find((u) => u.id === currentUserId);
+  const githubStatus = useLyraStore((s) => s.githubStatus);
+  const loginGitHub = useLyraStore((s) => s.loginGitHub);
+  const preferences = useLyraStore((s) => s.preferences);
+
   const [expandedProjectIds, setExpandedProjectIds] = useState<Set<string>>(
     new Set(projects.map((p) => p.id))
   );
@@ -37,6 +42,11 @@ export function Sidebar({
   const parentProjects = projects.filter((p) => !p.parentId);
   const lyraProject = parentProjects.find((p) => p.name === "Lyra") ?? parentProjects[0];
 
+  const wsName = workspace?.name ?? (preferences.workspace_name as string) ?? "Ambient";
+  const wsSub = githubStatus?.authenticated && githubStatus.user
+    ? `@${githubStatus.user.login}`
+    : currentUser?.email ?? "local workspace";
+
   return (
     <GlassSurface variant="dark-chrome" className={`${styles.sidebar} lyra-chrome-scope`} border={false}>
       {/* Brand & Traffic lights inset */}
@@ -45,12 +55,12 @@ export function Sidebar({
         <span className={styles.wordmark}>Lyra</span>
       </div>
 
-      {/* Workspace Switcher: Ambient / tanner@ambient.dev */}
+      {/* Workspace Switcher */}
       <div className={styles.workspaceSwitcher}>
-        <div className={styles.workspaceAvatar}>A</div>
+        <div className={styles.workspaceAvatar}>{wsName.slice(0, 1).toUpperCase()}</div>
         <div style={{ minWidth: 0, flex: 1 }}>
-          <div className={styles.workspaceName}>{workspace?.name ?? "Ambient"}</div>
-          <div className={styles.workspaceSub}>{currentUser?.email ?? "tanner@ambient.dev"}</div>
+          <div className={styles.workspaceName}>{wsName}</div>
+          <div className={styles.workspaceSub}>{wsSub}</div>
         </div>
         <LyraIcon name="chevron-down" size={12} style={{ color: "var(--lyra-chrome-faint)" }} />
       </div>
@@ -169,11 +179,18 @@ export function Sidebar({
             </span>
             <button
               title="Create Project"
+              onClick={async () => {
+                const name = window.prompt("Enter new project name:");
+                if (name && name.trim()) {
+                  const key = name.trim().slice(0, 3).toUpperCase();
+                  await createProject({ name: name.trim(), key });
+                }
+              }}
               style={{
                 background: "none",
                 border: "none",
                 color: "var(--lyra-chrome-faint)",
-                cursor: "default",
+                cursor: "pointer",
                 padding: 2,
                 display: "flex",
                 borderRadius: 4,
@@ -328,29 +345,53 @@ export function Sidebar({
         </button>
 
         <div className={styles.footer} style={{ borderTop: "1px solid var(--lyra-chrome-border)", paddingTop: 8 }}>
-          <div className={styles.profile}>
-            <div
-              style={{
-                width: 24,
-                height: 24,
-                borderRadius: 6,
-                background: "linear-gradient(135deg, #4f46e5, #3b82f6)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "white",
-                fontWeight: 700,
-                fontSize: 10,
-                flexShrink: 0,
-              }}
+          {githubStatus?.authenticated && githubStatus.user ? (
+            <div className={styles.profile} onClick={onOpenSettings} style={{ cursor: "pointer" }} title="GitHub connected">
+              {githubStatus.user.avatar_url ? (
+                <img
+                  src={githubStatus.user.avatar_url}
+                  alt={githubStatus.user.login}
+                  style={{ width: 24, height: 24, borderRadius: 6, objectFit: "cover", flexShrink: 0 }}
+                />
+              ) : (
+                <div
+                  style={{
+                    width: 24,
+                    height: 24,
+                    borderRadius: 6,
+                    background: "linear-gradient(135deg, #4f46e5, #3b82f6)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "white",
+                    fontWeight: 700,
+                    fontSize: 10,
+                    flexShrink: 0,
+                  }}
+                >
+                  {(githubStatus.user.login || "U").slice(0, 2).toUpperCase()}
+                </div>
+              )}
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <div className={styles.profileName}>
+                  {githubStatus.user.name || githubStatus.user.login}
+                </div>
+                <div className={styles.profilePlan}>@{githubStatus.user.login}</div>
+              </div>
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#34d399", marginRight: 2 }} />
+            </div>
+          ) : (
+            <button
+              className={styles.row}
+              onClick={() => void loginGitHub()}
+              style={{ height: 32, padding: "0 6px", width: "100%", color: "var(--lyra-chrome-text)" }}
             >
-              TD
-            </div>
-            <div style={{ minWidth: 0, flex: 1 }}>
-              <div className={styles.profileName}>Tanner Davidson</div>
-              <div className={styles.profilePlan}>Free Plan</div>
-            </div>
-          </div>
+              <span className={styles.rowIcon}>
+                <LyraIcon name="github" size={14} />
+              </span>
+              <span className={styles.rowLabel} style={{ fontWeight: 500 }}>Sign in with GitHub</span>
+            </button>
+          )}
         </div>
       </div>
     </GlassSurface>

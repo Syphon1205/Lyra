@@ -72,6 +72,15 @@ export const IPC = {
   gitCommits: "lyra:git:commits",
   gitCreateBranch: "lyra:git:createBranch",
 
+  githubContributors: "lyra:github:contributors",
+
+  systemPickDirectory: "lyra:system:pickDirectory",
+  systemOpenTerminal: "lyra:system:openTerminal",
+  dataDatabaseInfo: "lyra:data:databaseInfo",
+  dataExport: "lyra:data:export",
+  dataReset: "lyra:data:reset",
+  seedSampleData: "lyra:seed:sampleData",
+
   windowOpenIssue: "lyra:window:openIssue",
   windowOpenChat: "lyra:window:openChat",
 } as const;

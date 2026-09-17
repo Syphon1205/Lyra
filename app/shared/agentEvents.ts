@@ -6,7 +6,15 @@
  * schemas — see MIGRATION.md for the probe transcripts this was built from).
  */
 
-export type AgentProviderId = "claude-code" | "codex" | "opencode" | "gemini";
+export type AgentProviderId = "claude-code" | "codex" | "opencode" | "gemini" | "kilo";
+
+export type AgentProviderStatus =
+  | "installed_ready"
+  | "auth_required"
+  | "config_required"
+  | "not_found"
+  | "unsupported_version"
+  | "error";
 
 export interface AgentCapabilities {
   streaming: boolean;
@@ -19,9 +27,13 @@ export interface AgentCapabilities {
 export interface AgentAdapterDescriptor {
   id: AgentProviderId;
   displayName: string;
-  /** Whether the adapter's executable was found on PATH at detect() time. */
+  /** Status of the CLI agent */
+  status: AgentProviderStatus;
   available: boolean;
   executablePath?: string;
+  version?: string;
+  supportedModels: string[];
+  supportedReasoningEfforts?: string[];
   capabilities: AgentCapabilities;
 }
 
