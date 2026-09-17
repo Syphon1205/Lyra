@@ -577,6 +577,7 @@ async function runCaptureWorkflow(win: BrowserWindow) {
         action: `
           const s = window.__store.getState();
           s.closeCompanionPanel();
+          s.closeBottomPane?.();
           s.setSelection({ kind: "settings" });
         `,
       },
@@ -586,6 +587,7 @@ async function runCaptureWorkflow(win: BrowserWindow) {
           const s = window.__store.getState();
           const p = s.projects.find(x => x.name.includes("Engineering")) || s.projects[0];
           s.closeCompanionPanel();
+          s.closeBottomPane?.();
           if (p) s.setSelection({ kind: "project", projectId: p.id });
           s.setProjectTab("board");
           if (window.__setPaletteOpen) window.__setPaletteOpen(true);
@@ -598,6 +600,7 @@ async function runCaptureWorkflow(win: BrowserWindow) {
           const p = s.projects.find(x => x.name.includes("Engineering")) || s.projects[0];
           if (window.__setPaletteOpen) window.__setPaletteOpen(false);
           s.closeCompanionPanel();
+          s.closeBottomPane?.();
           if (p) s.setSelection({ kind: "project", projectId: p.id });
           s.setProjectTab("timeline");
         `,
@@ -608,6 +611,7 @@ async function runCaptureWorkflow(win: BrowserWindow) {
           const s = window.__store.getState();
           const p = s.projects.find(x => x.name.includes("Engineering")) || s.projects[0];
           s.closeCompanionPanel();
+          s.closeBottomPane?.();
           if (p) s.setSelection({ kind: "project", projectId: p.id });
           s.setProjectTab("components");
         `,
@@ -618,6 +622,7 @@ async function runCaptureWorkflow(win: BrowserWindow) {
           const s = window.__store.getState();
           const p = s.projects.find(x => x.name.includes("Engineering")) || s.projects[0];
           s.closeCompanionPanel();
+          s.closeBottomPane?.();
           if (p) s.setSelection({ kind: "project", projectId: p.id });
           s.setProjectTab("releases");
         `,
@@ -628,6 +633,7 @@ async function runCaptureWorkflow(win: BrowserWindow) {
           const s = window.__store.getState();
           const p = s.projects.find(x => x.name.includes("Engineering")) || s.projects[0];
           s.closeCompanionPanel();
+          s.closeBottomPane?.();
           if (p) s.setSelection({ kind: "project", projectId: p.id });
           s.setProjectTab("pages");
         `,
@@ -675,7 +681,23 @@ function buildMenu(): Menu {
       ],
     },
     { role: "editMenu" },
-    { role: "viewMenu" },
+    {
+      label: "View",
+      submenu: [
+        { role: "reload" },
+        { role: "forceReload" },
+        { role: "toggleDevTools" },
+        { type: "separator" },
+        { label: "Toggle Sidebar", accelerator: "CmdOrCtrl+\\", click: () => broadcast("lyra:menu:toggleSidebar") },
+        { label: "Toggle Bottom Pane", accelerator: "CmdOrCtrl+J", click: () => broadcast("lyra:menu:toggleBottomPane") },
+        { type: "separator" },
+        { role: "resetZoom" },
+        { role: "zoomIn" },
+        { role: "zoomOut" },
+        { type: "separator" },
+        { role: "togglefullscreen" },
+      ],
+    },
     {
       label: "Go",
       submenu: [

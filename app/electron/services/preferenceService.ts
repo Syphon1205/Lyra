@@ -17,15 +17,17 @@ export class PreferenceService {
     return result;
   }
 
-  set(key: string, value: string): void {
-    this.db.prepare("INSERT OR REPLACE INTO preferences (key, value) VALUES (?, ?)").run(key, value);
+  set(key: string, value: unknown): void {
+    const serialized = typeof value === "string" ? value : String(value);
+    this.db.prepare("INSERT OR REPLACE INTO preferences (key, value) VALUES (?, ?)").run(key, serialized);
   }
 
-  setMany(entries: Record<string, string>): void {
+  setMany(entries: Record<string, unknown>): void {
     const stmt = this.db.prepare("INSERT OR REPLACE INTO preferences (key, value) VALUES (?, ?)");
     this.db.transaction(() => {
       for (const [key, value] of Object.entries(entries)) {
-        stmt.run(key, value);
+        const serialized = typeof value === "string" ? value : String(value);
+        stmt.run(key, serialized);
       }
     })();
   }

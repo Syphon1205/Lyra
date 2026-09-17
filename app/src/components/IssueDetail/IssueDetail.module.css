@@ -480,8 +480,9 @@
 
 /* Right Inspector */
 .rightInspector {
-  width: 320px;
-  min-width: 320px;
+  width: clamp(240px, 25vw, 320px);
+  min-width: 220px;
+  flex-shrink: 0;
   padding: 24px 20px 40px;
   display: flex;
   flex-direction: column;

@@ -39,6 +39,9 @@ export function CommandPalette({
   const setSelection = useLyraStore((s) => s.setSelection);
   const openIssueDetail = useLyraStore((s) => s.openIssueDetail);
   const openGeneralChat = useLyraStore((s) => s.openGeneralChat);
+  const toggleSidebarCollapsed = useLyraStore((s) => s.toggleSidebarCollapsed);
+  const openBottomPane = useLyraStore((s) => s.openBottomPane);
+  const toggleBottomPane = useLyraStore((s) => s.toggleBottomPane);
 
   const allItems: PaletteItem[] = useMemo(() => {
     const baseActions: PaletteItem[] = [
@@ -57,6 +60,54 @@ export function CommandPalette({
         icon: "agent",
         shortcut: "⌘ ⇧ A",
         run: () => void openGeneralChat(),
+      },
+      {
+        id: "toggle-sidebar",
+        category: "Actions",
+        label: "Toggle primary sidebar",
+        icon: "sidebar",
+        shortcut: "⌘ \\",
+        run: () => toggleSidebarCollapsed(),
+      },
+      {
+        id: "toggle-bottom-pane",
+        category: "Actions",
+        label: "Toggle bottom panel",
+        icon: "terminal",
+        shortcut: "⌘ J",
+        run: () => toggleBottomPane(),
+      },
+      {
+        id: "view-diff",
+        category: "Actions",
+        label: "View Git diff / changes",
+        icon: "diff",
+        shortcut: "",
+        run: () => openBottomPane("diff"),
+      },
+      {
+        id: "open-terminal",
+        category: "Actions",
+        label: "Open terminal",
+        icon: "terminal",
+        shortcut: "^ T",
+        run: () => openBottomPane("terminal"),
+      },
+      {
+        id: "view-files",
+        category: "Actions",
+        label: "View changed files",
+        icon: "file",
+        shortcut: "",
+        run: () => openBottomPane("files"),
+      },
+      {
+        id: "run-tests",
+        category: "Actions",
+        label: "Run test suite",
+        icon: "tests",
+        shortcut: "",
+        run: () => openBottomPane("tests"),
       },
       {
         id: "open-lyr-142",
@@ -85,14 +136,6 @@ export function CommandPalette({
         icon: "run",
         shortcut: "⌘ B",
         run: () => console.log("Run build"),
-      },
-      {
-        id: "open-terminal",
-        category: "Actions",
-        label: "Open terminal",
-        icon: "terminal",
-        shortcut: "^ T",
-        run: () => console.log("Open terminal"),
       },
       {
         id: "search-repo",

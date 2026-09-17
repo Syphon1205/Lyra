@@ -1,0 +1,46 @@
+.splitter {
+  position: relative;
+  z-index: 10;
+  flex-shrink: 0;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+
+.colResize {
+  width: 6px;
+  cursor: col-resize;
+}
+
+.rowResize {
+  height: 6px;
+  cursor: row-resize;
+}
+
+.line {
+  position: absolute;
+  background: transparent;
+  border-radius: 999px;
+  transition: background 150ms ease, opacity 150ms ease;
+  pointer-events: none;
+}
+
+.colResize .line {
+  top: 4px;
+  bottom: 4px;
+  width: 2px;
+}
+
+.rowResize .line {
+  left: 4px;
+  right: 4px;
+  height: 2px;
+}
+
+.splitter:hover .line,
+.splitter.active .line {
+  background: var(--lyra-accent-solid, #626bff);
+  opacity: 0.85;
+}

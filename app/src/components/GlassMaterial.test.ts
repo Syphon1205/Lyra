@@ -67,7 +67,12 @@ describe("glass-material contract", () => {
     expect(css).toMatch(/\.panel\s*\{[^}]*opacity:\s*1/);
     expect(css).not.toMatch(/\.panel\s*\{[^}]*background:\s*var\(--lyra-canvas\)/);
     expect(css).toMatch(/\.messages\s*\{[^}]*background:\s*transparent/);
-    expect(css).toMatch(/\.panel\s*\{[^}]*resize:\s*horizontal/);
+    // Panel fills whatever width its AppShell column gives it; the column itself
+    // is resized by a real draggable Splitter (not the native CSS resize handle,
+    // which only grabs one corner and never syncs back to persisted state).
+    expect(css).toMatch(/\.panel\s*\{[^}]*width:\s*100%/);
+    const shellTsx = read("components/AppShell.tsx");
+    expect(shellTsx).toContain("<Splitter");
     const tsx = read("components/Chat/ChatPanel.tsx");
     expect(tsx).toContain('variant="dark-chrome"');
     expect(tsx).toContain("radius={18}");

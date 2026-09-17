@@ -211,6 +211,8 @@ export interface LyraApi {
     onNewIssue(cb: () => void): () => void;
     onCommandPalette(cb: () => void): () => void;
     onToggleChat(cb: () => void): () => void;
+    onToggleSidebar(cb: () => void): () => void;
+    onToggleBottomPane(cb: () => void): () => void;
   };
 }
 

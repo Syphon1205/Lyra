@@ -44,6 +44,14 @@ export type ProjectTab = "board" | "backlog" | "list" | "timeline" | "components
 
 export type CompanionPanel = { kind: "none" } | { kind: "issueDetail"; issueId: ID } | { kind: "agentChat"; sessionId: ID };
 
+export type BottomPaneTab = "diff" | "files" | "terminal" | "tests";
+
+export interface BottomPaneState {
+  isOpen: boolean;
+  height: number;
+  tab: BottomPaneTab;
+}
+
 interface LyraState {
   loaded: boolean;
   workspace?: Workspace;
@@ -77,6 +85,7 @@ interface LyraState {
   isSidebarCollapsed: boolean;
   isCompanionWide: boolean;
   onboardingCompleted: boolean;
+  bottomPane: BottomPaneState;
   activeChatOptions: {
     model?: string;
     reasoningEffort?: string;
@@ -115,6 +124,11 @@ interface LyraState {
   setSidebarCollapsed(collapsed: boolean): void;
   toggleSidebarCollapsed(): void;
   toggleCompanionWide(): void;
+  setBottomPaneHeight(height: number): void;
+  setBottomPaneTab(tab: BottomPaneTab): void;
+  openBottomPane(tab?: BottomPaneTab): void;
+  closeBottomPane(): void;
+  toggleBottomPane(tab?: BottomPaneTab): void;
   setOnboardingCompleted(completed: boolean): Promise<void>;
   loadContributors(repoPath?: string): Promise<void>;
   setActiveChatOptions(opts: Partial<{ model?: string; reasoningEffort?: string; repoPath?: string; providerId?: AgentProviderId }>): void;
@@ -218,6 +232,11 @@ export const useLyraStore = create<LyraState>((set, get) => ({
   isSidebarCollapsed: false,
   isCompanionWide: false,
   onboardingCompleted: true,
+  bottomPane: {
+    isOpen: false,
+    height: 300,
+    tab: "diff",
+  },
   activeChatOptions: {},
 
   selection: { kind: "project", projectId: "" },
@@ -319,6 +338,9 @@ export const useLyraStore = create<LyraState>((set, get) => ({
     const savedSidebarWidth = Number(preferences?.sidebar_width) || 240;
     const savedCompanionWidth = Number(preferences?.companion_width) || 420;
     const savedSidebarCollapsed = preferences?.sidebar_collapsed === "true" || preferences?.sidebar_collapsed === true;
+    const savedBottomPaneHeight = Number(preferences?.bottom_pane_height) || 300;
+    const savedBottomPaneOpen = preferences?.bottom_pane_open === "true" || preferences?.bottom_pane_open === true;
+    const savedBottomPaneTab = (preferences?.bottom_pane_tab as BottomPaneTab) || "diff";
     const savedOnboardingCompleted =
       preferences?.onboarding_completed !== undefined
         ? preferences.onboarding_completed === "true" || preferences.onboarding_completed === true
@@ -353,6 +375,11 @@ export const useLyraStore = create<LyraState>((set, get) => ({
       sidebarWidth: Math.min(Math.max(savedSidebarWidth, 180), 480),
       companionWidth: Math.min(Math.max(savedCompanionWidth, 320), 760),
       isSidebarCollapsed: savedSidebarCollapsed,
+      bottomPane: {
+        isOpen: savedBottomPaneOpen,
+        height: Math.min(Math.max(savedBottomPaneHeight, 160), 600),
+        tab: savedBottomPaneTab,
+      },
       onboardingCompleted: savedOnboardingCompleted,
       density: savedDensity ?? "comfortable",
       selection: firstProject ? { kind: "project", projectId: firstProject.id } : { kind: "forYou" },
@@ -393,6 +420,37 @@ export const useLyraStore = create<LyraState>((set, get) => ({
     void get().savePreference("sidebar_collapsed", next);
   },
   toggleCompanionWide: () => set((s) => ({ isCompanionWide: !s.isCompanionWide })),
+  setBottomPaneHeight: (height) => {
+    set((s) => ({ bottomPane: { ...s.bottomPane, height } }));
+    void get().savePreference("bottom_pane_height", height);
+  },
+  setBottomPaneTab: (tab) => {
+    set((s) => ({ bottomPane: { ...s.bottomPane, tab } }));
+    void get().savePreference("bottom_pane_tab", tab);
+  },
+  openBottomPane: (tab) => {
+    set((s) => ({
+      bottomPane: {
+        ...s.bottomPane,
+        isOpen: true,
+        tab: tab ?? s.bottomPane.tab,
+      },
+    }));
+    void get().savePreference("bottom_pane_open", true);
+    if (tab) void get().savePreference("bottom_pane_tab", tab);
+  },
+  closeBottomPane: () => {
+    set((s) => ({ bottomPane: { ...s.bottomPane, isOpen: false } }));
+    void get().savePreference("bottom_pane_open", false);
+  },
+  toggleBottomPane: (tab) => {
+    const current = get().bottomPane;
+    if (current.isOpen && (!tab || current.tab === tab)) {
+      get().closeBottomPane();
+    } else {
+      get().openBottomPane(tab);
+    }
+  },
   setOnboardingCompleted: async (completed) => {
     set({ onboardingCompleted: completed });
     await get().savePreference("onboarding_completed", completed);

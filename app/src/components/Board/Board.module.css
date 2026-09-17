@@ -1,5 +1,8 @@
 .board {
   height: 100%;
+  min-height: 0;
+  min-width: 0;
+  flex: 1 1 auto;
   overflow-x: auto;
   overflow-y: hidden;
   display: flex;
@@ -8,8 +11,9 @@
 }
 
 .column {
-  width: 278px;
-  min-width: 278px;
+  width: clamp(248px, 20vw, 278px);
+  min-width: 240px;
+  flex: 0 0 clamp(248px, 20vw, 278px);
   display: flex;
   flex-direction: column;
   border-radius: 10px;

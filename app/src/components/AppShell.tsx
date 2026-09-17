@@ -5,6 +5,7 @@ import { TopBar } from "./TopBar";
 import { ProjectView } from "./ProjectView";
 import { IssuePanel } from "./IssuePanel/IssuePanel";
 import { ChatPanel } from "./Chat/ChatPanel";
+import { DiffReview } from "./DiffReview/DiffReview";
 import { IssueComposer } from "./IssueComposer";
 import { CommandPalette } from "./CommandPalette/CommandPalette";
 import { SimpleIssueList } from "./SimpleIssueList";
@@ -15,7 +16,21 @@ import { SettingsView } from "./Settings/SettingsView";
 import { OnboardingView } from "./Onboarding/OnboardingView";
 import { AppIcon } from "./AppIcon";
 import { Avatar } from "./Avatar";
+import { Splitter } from "./Splitter";
 import styles from "./AppShell.module.css";
+
+const SIDEBAR_MIN = 180;
+const SIDEBAR_MAX = 480;
+const SIDEBAR_DEFAULT = 240;
+const COMPANION_MIN = 320;
+const COMPANION_MAX = 760;
+const COMPANION_DEFAULT = 420;
+const COMPANION_WIDE = 680;
+const BOTTOM_PANE_MIN = 160;
+const BOTTOM_PANE_MAX_FRACTION = 0.75;
+const BOTTOM_PANE_DEFAULT = 300;
+/** Smallest useful width for the center workspace before it should stop shrinking further. */
+const CENTER_MIN = 360;
 
 export function AppShell() {
   const [composerOpen, setComposerOpen] = useState(false);
@@ -23,6 +38,7 @@ export function AppShell() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [isDraggingSidebar, setIsDraggingSidebar] = useState(false);
   const [isDraggingCompanion, setIsDraggingCompanion] = useState(false);
+  const [isDraggingBottomPane, setIsDraggingBottomPane] = useState(false);
 
   const selection = useLyraStore((s) => s.selection);
   const companionPanel = useLyraStore((s) => s.companionPanel);
@@ -38,6 +54,11 @@ export function AppShell() {
   const toggleSidebarCollapsed = useLyraStore((s) => s.toggleSidebarCollapsed);
   const isCompanionWide = useLyraStore((s) => s.isCompanionWide);
   const onboardingCompleted = useLyraStore((s) => s.onboardingCompleted);
+  const bottomPane = useLyraStore((s) => s.bottomPane);
+  const setBottomPaneHeight = useLyraStore((s) => s.setBottomPaneHeight);
+  const setBottomPaneTab = useLyraStore((s) => s.setBottomPaneTab);
+  const toggleBottomPane = useLyraStore((s) => s.toggleBottomPane);
+  const closeBottomPane = useLyraStore((s) => s.closeBottomPane);
 
   useEffect(() => {
     const offNewIssue = window.lyra.menu.onNewIssue(() => setComposerOpen(true));
@@ -49,14 +70,18 @@ export function AppShell() {
         void openGeneralChat();
       }
     });
+    const offToggleSidebar = window.lyra.menu.onToggleSidebar?.(() => toggleSidebarCollapsed());
+    const offToggleBottomPane = window.lyra.menu.onToggleBottomPane?.(() => useLyraStore.getState().toggleBottomPane());
     (window as any).__setPaletteOpen = setPaletteOpen;
     return () => {
       delete (window as any).__setPaletteOpen;
       offNewIssue();
       offPalette();
       offToggleChat();
+      offToggleSidebar?.();
+      offToggleBottomPane?.();
     };
-  }, [openGeneralChat]);
+  }, [openGeneralChat, toggleSidebarCollapsed]);
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -69,6 +94,18 @@ export function AppShell() {
         e.preventDefault();
         toggleSidebarCollapsed();
       }
+      if ((e.key === "j" || e.key === "J") && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        toggleBottomPane();
+      }
+      if ((e.key === "a" || e.key === "A") && (e.metaKey || e.ctrlKey) && e.shiftKey) {
+        e.preventDefault();
+        if (useLyraStore.getState().companionPanel.kind === "agentChat") {
+          useLyraStore.getState().closeCompanionPanel();
+        } else {
+          void openGeneralChat();
+        }
+      }
       if (e.key === "," && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
         useLyraStore.getState().setSelection({ kind: "settings" });
@@ -76,56 +113,18 @@ export function AppShell() {
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [toggleSidebarCollapsed]);
-
-  const startSidebarDrag = (e: React.MouseEvent) => {
-    e.preventDefault();
-    setIsDraggingSidebar(true);
-    const startX = e.clientX;
-    const startW = sidebarWidth;
-    const onMouseMove = (ev: MouseEvent) => {
-      const delta = ev.clientX - startX;
-      const newW = Math.min(Math.max(startW + delta, 180), 480);
-      setSidebarWidth(newW);
-    };
-    const onMouseUp = () => {
-      setIsDraggingSidebar(false);
-      window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("mouseup", onMouseUp);
-    };
-    window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("mouseup", onMouseUp);
-  };
-
-  const startCompanionDrag = (e: React.MouseEvent) => {
-    e.preventDefault();
-    setIsDraggingCompanion(true);
-    const startX = e.clientX;
-    const startW = isCompanionWide ? 680 : companionWidth;
-    const onMouseMove = (ev: MouseEvent) => {
-      const delta = startX - ev.clientX;
-      const newW = Math.min(Math.max(startW + delta, 320), 760);
-      setCompanionWidth(newW);
-    };
-    const onMouseUp = () => {
-      setIsDraggingCompanion(false);
-      window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("mouseup", onMouseUp);
-    };
-    window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("mouseup", onMouseUp);
-  };
+  }, [toggleSidebarCollapsed, toggleBottomPane, openGeneralChat]);
 
   const isCompanionOpen = companionPanel.kind !== "none";
-  const effectiveCompanionWidth = isCompanionWide ? 680 : companionWidth;
+  const effectiveCompanionWidth = isCompanionWide ? COMPANION_WIDE : companionWidth;
 
   return (
     <div className={styles.root}>
       <div className={styles.desktopBackdrop} />
 
-      {/* Resizable Sidebar Container */}
+      {/* Resizable Sidebar Column */}
       <div
-        className={styles.sidebarWrap}
+        className={`${styles.sidebarWrap} ${isDraggingSidebar ? styles.noTransition : ""}`}
         style={{
           width: isSidebarCollapsed ? 0 : sidebarWidth,
           opacity: isSidebarCollapsed ? 0 : 1,
@@ -133,15 +132,18 @@ export function AppShell() {
         }}
       >
         <Sidebar onOpenSettings={() => useLyraStore.getState().setSelection({ kind: "settings" })} />
-        {!isSidebarCollapsed && (
-          <div
-            className={`${styles.sidebarResizer} ${isDraggingSidebar ? styles.sidebarResizerActive : ""}`}
-            onMouseDown={startSidebarDrag}
-            onDoubleClick={() => setSidebarWidth(240)}
-            title="Drag to resize sidebar (double-click to reset)"
-          />
-        )}
       </div>
+      {!isSidebarCollapsed && (
+        <Splitter
+          axis="x"
+          className={styles.sidebarSplitter}
+          getStart={() => sidebarWidth}
+          onChange={(w) => setSidebarWidth(Math.min(Math.max(w, SIDEBAR_MIN), SIDEBAR_MAX))}
+          onReset={() => setSidebarWidth(SIDEBAR_DEFAULT)}
+          onDraggingChange={setIsDraggingSidebar}
+          title="Drag to resize sidebar (double-click to reset)"
+        />
+      )}
 
       <div className={styles.main}>
         <TopBar
@@ -151,55 +153,90 @@ export function AppShell() {
         />
         <div className={styles.contentRow}>
           <div className={styles.center}>
-            {selection.kind === "project" && <ProjectView projectId={selection.projectId} />}
-            {selection.kind === "issue" && <IssueDetailView issueId={selection.issueId} />}
-            {selection.kind === "forYou" && (
-              <SimpleIssueList
-                title="Inbox"
-                issues={issues.filter((i) => i.assigneeId === currentUserId && i.status !== "done" && i.status !== "canceled")}
-                emptyText="Inbox zero. Nothing needs your attention."
-              />
+            <div className={styles.centerBody}>
+              {selection.kind === "project" && <ProjectView projectId={selection.projectId} />}
+              {selection.kind === "issue" && <IssueDetailView issueId={selection.issueId} />}
+              {selection.kind === "forYou" && (
+                <SimpleIssueList
+                  title="Inbox"
+                  issues={issues.filter((i) => i.assigneeId === currentUserId && i.status !== "done" && i.status !== "canceled")}
+                  emptyText="Inbox zero. Nothing needs your attention."
+                />
+              )}
+              {selection.kind === "assigned" && (
+                <SimpleIssueList title="Assigned to Me" issues={issues.filter((i) => i.assigneeId === currentUserId)} emptyText="No issues assigned to you." />
+              )}
+              {selection.kind === "created" && (
+                <SimpleIssueList title="Created by Me" issues={issues.filter((i) => i.creatorId === currentUserId)} emptyText="You haven't created any issues yet." />
+              )}
+              {selection.kind === "recent" && (
+                <SimpleIssueList
+                  title="Recent"
+                  issues={recentIssueIds.map((id) => issues.find((i) => i.id === id)).filter((i): i is NonNullable<typeof i> => !!i)}
+                  emptyText="Issues you open will show up here."
+                />
+              )}
+              {selection.kind === "starred" && <StarredProjects />}
+              {selection.kind === "filters" && (
+                <SimpleIssueList title="Assigned to Me" issues={issues.filter((i) => i.assigneeId === currentUserId)} emptyText="Nothing matches." />
+              )}
+              {selection.kind === "teams" && <TeamsOverview />}
+              {selection.kind === "agents" && <AgentsView />}
+              {selection.kind === "runs" && <AgentsView initialTab="runs" />}
+              {selection.kind === "settings" && <SettingsView />}
+            </div>
+
+            {bottomPane.isOpen && (
+              <>
+                <Splitter
+                  axis="y"
+                  className={styles.bottomSplitter}
+                  getStart={() => bottomPane.height}
+                  onChange={(h) =>
+                    setBottomPaneHeight(
+                      Math.min(Math.max(h, BOTTOM_PANE_MIN), window.innerHeight * BOTTOM_PANE_MAX_FRACTION)
+                    )
+                  }
+                  onReset={() => setBottomPaneHeight(BOTTOM_PANE_DEFAULT)}
+                  onDraggingChange={setIsDraggingBottomPane}
+                  invert
+                  title="Drag to resize (double-click to reset)"
+                />
+                <div
+                  className={`${styles.bottomPane} ${isDraggingBottomPane ? styles.noTransition : ""}`}
+                  style={{ height: bottomPane.height }}
+                >
+                  <DiffReview tab={bottomPane.tab} onTabChange={setBottomPaneTab} onClose={closeBottomPane} />
+                </div>
+              </>
             )}
-            {selection.kind === "assigned" && (
-              <SimpleIssueList title="Assigned to Me" issues={issues.filter((i) => i.assigneeId === currentUserId)} emptyText="No issues assigned to you." />
-            )}
-            {selection.kind === "created" && (
-              <SimpleIssueList title="Created by Me" issues={issues.filter((i) => i.creatorId === currentUserId)} emptyText="You haven't created any issues yet." />
-            )}
-            {selection.kind === "recent" && (
-              <SimpleIssueList
-                title="Recent"
-                issues={recentIssueIds.map((id) => issues.find((i) => i.id === id)).filter((i): i is NonNullable<typeof i> => !!i)}
-                emptyText="Issues you open will show up here."
-              />
-            )}
-            {selection.kind === "starred" && <StarredProjects />}
-            {selection.kind === "filters" && (
-              <SimpleIssueList title="Assigned to Me" issues={issues.filter((i) => i.assigneeId === currentUserId)} emptyText="Nothing matches." />
-            )}
-            {selection.kind === "teams" && <TeamsOverview />}
-            {selection.kind === "agents" && <AgentsView />}
-            {selection.kind === "runs" && <AgentsView initialTab="runs" />}
-            {selection.kind === "settings" && <SettingsView />}
           </div>
 
           {/* Resizable & Smooth Sliding Companion Panel */}
+          {isCompanionOpen && (
+            <Splitter
+              axis="x"
+              className={styles.companionSplitter}
+              getStart={() => effectiveCompanionWidth}
+              onChange={(w) =>
+                setCompanionWidth(
+                  Math.min(Math.max(w, COMPANION_MIN), Math.min(COMPANION_MAX, window.innerWidth - CENTER_MIN - sidebarWidth))
+                )
+              }
+              onReset={() => setCompanionWidth(COMPANION_DEFAULT)}
+              onDraggingChange={setIsDraggingCompanion}
+              invert
+              title="Drag to resize panel (double-click to reset)"
+            />
+          )}
           <div
-            className={styles.companionWrap}
+            className={`${styles.companionWrap} ${isDraggingCompanion ? styles.noTransition : ""}`}
             style={{
               width: isCompanionOpen ? effectiveCompanionWidth : 0,
               opacity: isCompanionOpen ? 1 : 0,
               pointerEvents: isCompanionOpen ? "auto" : "none",
             }}
           >
-            {isCompanionOpen && (
-              <div
-                className={`${styles.companionResizer} ${isDraggingCompanion ? styles.companionResizerActive : ""}`}
-                onMouseDown={startCompanionDrag}
-                onDoubleClick={() => setCompanionWidth(420)}
-                title="Drag to resize panel (double-click to reset)"
-              />
-            )}
             {companionPanel.kind === "issueDetail" && <IssuePanel issueId={companionPanel.issueId} />}
             {companionPanel.kind === "agentChat" && <ChatPanel sessionId={companionPanel.sessionId} />}
           </div>

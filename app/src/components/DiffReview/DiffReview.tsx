@@ -33,12 +33,18 @@ export function DiffReview({
   onClose,
   onApply,
   onReject,
+  tab: controlledTab,
+  onTabChange,
 }: {
   onClose?: () => void;
   onApply?: () => void;
   onReject?: () => void;
+  tab?: "diff" | "files" | "terminal" | "tests";
+  onTabChange?: (tab: "diff" | "files" | "terminal" | "tests") => void;
 }) {
-  const [tab, setTab] = useState<"diff" | "files" | "terminal" | "tests">("diff");
+  const [localTab, setLocalTab] = useState<"diff" | "files" | "terminal" | "tests">("diff");
+  const tab = controlledTab ?? localTab;
+  const setTab = onTabChange ?? setLocalTab;
   const [applied, setApplied] = useState(false);
   const [rawDiff, setRawDiff] = useState<string | null>(null);
   const [diffLines, setDiffLines] = useState<DiffLine[]>(DEFAULT_DIFF_LINES);

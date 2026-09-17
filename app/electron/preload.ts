@@ -147,6 +147,14 @@ const lyra = {
       ipcRenderer.on("lyra:menu:toggleChat", cb);
       return () => ipcRenderer.removeListener("lyra:menu:toggleChat", cb);
     },
+    onToggleSidebar: (cb: () => void) => {
+      ipcRenderer.on("lyra:menu:toggleSidebar", cb);
+      return () => ipcRenderer.removeListener("lyra:menu:toggleSidebar", cb);
+    },
+    onToggleBottomPane: (cb: () => void) => {
+      ipcRenderer.on("lyra:menu:toggleBottomPane", cb);
+      return () => ipcRenderer.removeListener("lyra:menu:toggleBottomPane", cb);
+    },
   },
 };
 

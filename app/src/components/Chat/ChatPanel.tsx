@@ -3,7 +3,6 @@ import { useLyraStore } from "../../state/store";
 import { LyraIcon, LyraIconName } from "../../icons/LyraIcon";
 import { LyraMark } from "../Sidebar";
 import { GlassSurface } from "../GlassSurface";
-import { DiffReview } from "../DiffReview/DiffReview";
 import { issueKey } from "../../lib/issueMeta";
 import type { AgentProviderId } from "@shared/agentEvents";
 import styles from "./ChatPanel.module.css";
@@ -30,11 +29,10 @@ export function ChatPanel({
   const refreshSession = useLyraStore((s) => s.refreshSession);
   const activeChatOptions = useLyraStore((s) => s.activeChatOptions);
   const setActiveChatOptions = useLyraStore((s) => s.setActiveChatOptions);
+  const bottomPane = useLyraStore((s) => s.bottomPane);
+  const toggleBottomPane = useLyraStore((s) => s.toggleBottomPane);
 
   const [draft, setDraft] = useState(session?.draft ?? "");
-  const [currentTab, setCurrentTab] = useState<"chat" | "diff" | "files" | "terminal" | "tests">(
-    "chat"
-  );
   const [showContextPicker, setShowContextPicker] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -42,7 +40,10 @@ export function ChatPanel({
 
   useEffect(() => {
     void refreshSession(sessionId);
-    (window as any).__setChatTab = setCurrentTab;
+    (window as any).__setChatTab = (tab: "chat" | "diff" | "files" | "terminal" | "tests") => {
+      if (tab === "chat") useLyraStore.getState().closeBottomPane();
+      else useLyraStore.getState().openBottomPane(tab);
+    };
     return () => {
       delete (window as any).__setChatTab;
     };
@@ -101,33 +102,37 @@ export function ChatPanel({
 
         <div className={styles.spacer} />
 
-        {/* Tab switcher buttons in header */}
+        {/* Tab switcher buttons in header — these open the resizable workspace bottom pane */}
         <div className={styles.headerTabs}>
           <button
             data-tab="diff"
-            className={`${styles.headerTab} ${currentTab === "diff" ? styles.headerTabActive : ""}`}
-            onClick={() => setCurrentTab(currentTab === "diff" ? "chat" : "diff")}
+            className={`${styles.headerTab} ${bottomPane.isOpen && bottomPane.tab === "diff" ? styles.headerTabActive : ""}`}
+            onClick={() => toggleBottomPane("diff")}
+            title="Open diff in workspace"
           >
             Diff
           </button>
           <button
             data-tab="files"
-            className={`${styles.headerTab} ${currentTab === "files" ? styles.headerTabActive : ""}`}
-            onClick={() => setCurrentTab(currentTab === "files" ? "chat" : "files")}
+            className={`${styles.headerTab} ${bottomPane.isOpen && bottomPane.tab === "files" ? styles.headerTabActive : ""}`}
+            onClick={() => toggleBottomPane("files")}
+            title="Open changed files in workspace"
           >
             Files
           </button>
           <button
             data-tab="terminal"
-            className={`${styles.headerTab} ${currentTab === "terminal" ? styles.headerTabActive : ""}`}
-            onClick={() => setCurrentTab(currentTab === "terminal" ? "chat" : "terminal")}
+            className={`${styles.headerTab} ${bottomPane.isOpen && bottomPane.tab === "terminal" ? styles.headerTabActive : ""}`}
+            onClick={() => toggleBottomPane("terminal")}
+            title="Open terminal in workspace"
           >
             Terminal
           </button>
           <button
             data-tab="tests"
-            className={`${styles.headerTab} ${currentTab === "tests" ? styles.headerTabActive : ""}`}
-            onClick={() => setCurrentTab(currentTab === "tests" ? "chat" : "tests")}
+            className={`${styles.headerTab} ${bottomPane.isOpen && bottomPane.tab === "tests" ? styles.headerTabActive : ""}`}
+            onClick={() => toggleBottomPane("tests")}
+            title="Open tests in workspace"
           >
             Tests
           </button>
@@ -316,68 +321,8 @@ export function ChatPanel({
         </div>
       </div>
 
-      {/* Main Content Area: Diff View or Messages Stream or Tabs */}
-      {currentTab === "diff" ? (
-        <div className={styles.diffContainer}>
-          <DiffReview onClose={() => setCurrentTab("chat")} />
-        </div>
-      ) : currentTab === "files" ? (
-        <div style={{ flex: 1, padding: 16, overflowY: "auto", color: "white" }}>
-          <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 12 }}>Modified Working Tree Files</div>
-          {gitStatus && (gitStatus.staged.length > 0 || gitStatus.unstaged.length > 0 || gitStatus.untracked.length > 0) ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              {gitStatus.unstaged.map((f) => (
-                <div key={f} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, padding: "6px 8px", background: "rgba(255,255,255,0.04)", borderRadius: 6 }}>
-                  <span style={{ color: "#f59e0b" }}>M</span>
-                  <span style={{ fontFamily: "var(--lyra-font-mono)", flex: 1 }}>{f}</span>
-                </div>
-              ))}
-              {gitStatus.untracked.map((f) => (
-                <div key={f} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, padding: "6px 8px", background: "rgba(255,255,255,0.04)", borderRadius: 6 }}>
-                  <span style={{ color: "#34d399" }}>?</span>
-                  <span style={{ fontFamily: "var(--lyra-font-mono)", flex: 1 }}>{f}</span>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>Working tree is clean. No uncommitted files.</div>
-          )}
-        </div>
-      ) : currentTab === "terminal" ? (
-        <div style={{ flex: 1, padding: 16, overflowY: "auto", color: "white" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-            <span style={{ fontWeight: 600, fontSize: 13 }}>Agent Terminal Environment</span>
-            <button
-              className={styles.reviewButton}
-              onClick={() => void window.lyra.system.openTerminal()}
-            >
-              Launch System Terminal ↗
-            </button>
-          </div>
-          <div style={{ background: "#0b0f19", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: 12, fontFamily: "var(--lyra-font-mono)", fontSize: 11.5, lineHeight: 1.5, color: "#a5b4fc" }}>
-            <div>$ git status</div>
-            <div>On branch {gitStatus?.branch || "main"}</div>
-            <div>Status: {gitStatus?.clean ? "clean working tree" : "modified files present"}</div>
-            <div style={{ marginTop: 8 }}>$ {activeProvider} --version</div>
-            <div>{currentAdapter?.version || "installed and ready"}</div>
-          </div>
-        </div>
-      ) : currentTab === "tests" ? (
-        <div style={{ flex: 1, padding: 16, overflowY: "auto", color: "white" }}>
-          <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 8 }}>Test Suite & Validation</div>
-          <p style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", marginBottom: 16 }}>
-            Run integration and unit tests before applying agent diffs.
-          </p>
-          <button
-            className={styles.reviewButton}
-            onClick={() => alert("Test runner: all unit tests passed (0 failures).")}
-            style={{ width: "100%", padding: "10px 0", fontSize: 12 }}
-          >
-            Run Test Suite (vitest run)
-          </button>
-        </div>
-      ) : (
-        <div className={`${styles.messages} lyra-scroll`} ref={listRef}>
+      {/* Message Stream — Diff/Files/Terminal/Tests now live in the resizable workspace bottom pane */}
+      <div className={`${styles.messages} lyra-scroll`} ref={listRef}>
           {session.messages.length > 0 ? (
             session.messages.map((m) => (
               <div key={m.id} className={styles.message}>
@@ -439,7 +384,7 @@ export function ChatPanel({
                     <span className={styles.delCount}>
                       -{m.files.reduce((s, f) => s + f.deletions, 0)}
                     </span>
-                    <button className={styles.reviewButton} onClick={() => setCurrentTab("diff")}>
+                    <button className={styles.reviewButton} onClick={() => toggleBottomPane("diff")}>
                       Review changes
                     </button>
                   </div>
@@ -485,7 +430,6 @@ export function ChatPanel({
             </div>
           )}
         </div>
-      )}
 
       {/* Composer Row */}
       <div className={styles.composerWrap}>
