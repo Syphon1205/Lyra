@@ -57,7 +57,19 @@ All of this is wrapped in a meticulously crafted macOS interface adhering to a s
 
 ## 📸 Visual Tour
 
-### 1. Interactive Kanban Board
+### 1. First-Run Onboarding Experience
+*Zero-friction startup wizard configuring local SQLite WAL storage, agent CLI discovery, and GitHub CLI authorization.*
+
+![Lyra Onboarding](screenshots/00-onboarding.png)
+
+Lyra's onboarding flow prepares your environment in seconds:
+- **Local-First SQLite Storage**: Initializes high-performance WAL-mode persistence for zero latency and offline resilience.
+- **First-Class AI Coding Agents**: Automatically discovers installed agent CLI binaries (`claude`, `codex`, `gemini`, `opencode`, `kilo`).
+- **GitHub CLI Backbone**: Leverages your active system `gh` authentication without asking for personal access tokens.
+
+---
+
+### 2. Interactive Kanban Board
 *Effortless task orchestration with Pragmatic Drag and Drop, instant multi-attribute filtering, and a live docked agent companion.*
 
 ![Lyra Kanban Board](screenshots/01-board.png)
@@ -66,7 +78,7 @@ The board view provides a high-density, calm overview of your project's active c
 
 ---
 
-### 2. Deep Issue Inspection & Detail View
+### 3. Deep Issue Inspection & Detail View
 *Comprehensive issue metadata, Markdown previews, task checklists, branch linking, and an audit trail.*
 
 ![Lyra Issue Detail](screenshots/02-issue.png)
@@ -79,7 +91,7 @@ Every issue in Lyra is rich with context:
 
 ---
 
-### 3. Sprint Planning & Agile Backlog
+### 4. Sprint Planning & Agile Backlog
 *Prioritize cycles, manage sprint velocity, and track estimation points with zero friction.*
 
 ![Lyra Backlog](screenshots/03-backlog.png)
@@ -88,19 +100,67 @@ Organize multi-week cycles (e.g., *Cycle 04*), monitor sprint completion percent
 
 ---
 
-### 4. Agent Cockpit & Fleet Management
+### 5. Sprint Roadmap & Timeline View
+*Gantt-style timeline visualization for cross-functional sprint planning and milestone delivery schedules.*
+
+![Lyra Timeline](screenshots/09-timeline.png)
+
+Track milestone timelines and active sprint progress across your engineering roadmap:
+- **Cycle Visualization**: Inspect active cycle progress bars (e.g., *Cycle 04 · 68% Complete*) alongside upcoming planned sprints.
+- **Duration Scheduling**: Track estimation windows and delivery schedules for individual features and tasks.
+- **Cross-Team Alignment**: Align engineering work with planned release milestones across calendar weeks.
+
+---
+
+### 6. Architecture & Subsystem Components
+*Modular breakdown of project subsystems, tracking ownership, active issue distribution, and health metrics.*
+
+![Lyra Components](screenshots/10-components.png)
+
+Structure complex codebases into maintainable subsystem components:
+- **Component Cards**: Visualize core layers such as *Liquid Glass Shell*, *Navigation & Sidebar*, *Agent Runner Service*, and *Persistence Layer*.
+- **Ownership & Status**: Assign component leads (`Tanner Davidson`, `Marcus Lee`, `Elena Fischer`, `Priya Shah`) and monitor active component statuses.
+- **Issue Distribution**: Audit issue counts associated with each architecture module to quickly locate hotspots.
+
+---
+
+### 7. Releases & Milestone Tracking
+*Version release management tracking shipped milestones, active release candidate progress, and planned versions.*
+
+![Lyra Releases](screenshots/11-releases.png)
+
+Track the lifecycle of every Lyra version:
+- **Release Statuses**: Monitor `In Progress`, `Released`, and planned targets.
+- **Completion Meters**: Real-time progress bars showing completion percentage and resolved issue ratios (e.g., *12 of 16 issues completed*).
+- **Changelog Association**: Link issues, feature notes, and agent commits directly to target semver release tags.
+
+---
+
+### 8. Living Documentation & Project Pages
+*In-app Markdown knowledge base and architecture documentation directly adjacent to your backlog and board.*
+
+![Lyra Pages](screenshots/12-pages.png)
+
+Maintain your team's living technical documentation without context-switching to third-party wikis:
+- **Project Wiki**: Author and organize technical documentation directly alongside code issues.
+- **Architecture Guides**: Document system principles, design contracts, and developer onboarding steps.
+- **Markdown Support**: Full formatting capabilities with quick delete, edit, and cross-linking capabilities.
+
+---
+
+### 9. Agent Cockpit & Fleet Management
 *Run, monitor, and coordinate your AI coding agents across multiple local repositories.*
 
 ![Lyra Agent Cockpit](screenshots/04-agents.png)
 
 The Agent Cockpit gives engineering leads and individual developers complete observability over their agent workforce:
 - **Active Sessions**: Monitor live agent execution status (`Running`, `Idle`), elapsed time, and real-time step progress (*Inspecting files...*, *Editing WorkspaceLayout.tsx*, *Running tests...*).
-- **Available Providers**: Plug-and-play CLI adapters for Claude Code, OpenAI Codex CLI, Gemini CLI, and OpenCode.
+- **Available Providers**: Plug-and-play CLI adapters for Claude Code, OpenAI Codex CLI, Gemini CLI, OpenCode, and Kilo CLI.
 - **Historical Runs**: Comprehensive ledger of past agent runs, execution durations, start times, and outcomes (`Completed`, `Failed`).
 
 ---
 
-### 5. Real-Time Companion Agent Chat
+### 10. Real-Time Companion Agent Chat
 *Streaming tool executions, terminal monitoring, and multi-file code generation docked at your side.*
 
 ![Lyra Companion Agent Chat](screenshots/05-agent-chat.png)
@@ -112,7 +172,7 @@ The agent chat panel is anchored to your active project or issue:
 
 ---
 
-### 6. In-Context Diff & Code Review
+### 11. In-Context Diff & Code Review
 *Inspect syntax-highlighted git diffs with instant Apply or Reject controls before merging.*
 
 ![Lyra Diff Review](screenshots/06-diff.png)
@@ -121,7 +181,7 @@ Never blindly trust agent code edits. Lyra parses git patch outputs and displays
 
 ---
 
-### 7. Raycast-Style Command Palette (⌘K)
+### 12. Raycast-Style Command Palette (⌘K)
 *Instant keyboard-first navigation for every corner of your workspace.*
 
 ![Lyra Command Palette](screenshots/08-command-palette.png)
@@ -130,7 +190,7 @@ Press `⌘K` anywhere in Lyra to trigger the command palette. Rapidly create new
 
 ---
 
-### 8. Settings & Liquid Glass Material Engine
+### 13. Settings & Liquid Glass Material Engine
 *Fine-tune macOS vibrancy, accent colors, layout density, and agent CLI bindings.*
 
 ![Lyra Settings](screenshots/07-settings.png)
