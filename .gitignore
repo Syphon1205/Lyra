@@ -1,0 +1,74 @@
+# Dependencies
+node_modules/
+**/node_modules/
+.pnp
+.pnp.js
+
+# Production and build outputs
+dist/
+**/dist/
+dist-electron/
+**/dist-electron/
+release/
+**/release/
+build/
+**/build/
+out/
+**/out/
+
+# Vite and test caches
+.vite/
+**/.vite/
+.vitest/
+**/.vitest/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.local
+
+# macOS system files
+.DS_Store
+**/.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+
+# Local agent workspaces & runtime databases
+.lyra/worktrees/
+*.sqlite
+*.sqlite3
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
+
+# Xcode / Swift (preserved from native prototype)
+DerivedData/
+*.xcuserstate
+*.xcuserdatad/
+*.xcscmblueprint
+xcuserdata/
+*.moved-aside
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+*.xcodeproj/
+.build/
+.swiftpm/
+

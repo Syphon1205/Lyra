@@ -1,0 +1,124 @@
+.panel {
+  width: var(--lyra-panel-width);
+  min-width: 320px;
+  max-width: 560px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid var(--lyra-border);
+  background: var(--lyra-canvas);
+  overflow-y: auto;
+}
+
+.topBar {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  gap: 8px;
+}
+.key {
+  font-family: var(--lyra-font-mono);
+  font-size: 11.5px;
+  color: var(--lyra-text-faint);
+}
+.spacer {
+  flex: 1;
+}
+.iconButton {
+  background: none;
+  border: none;
+  color: var(--lyra-text-muted);
+  display: flex;
+  padding: 4px;
+  border-radius: 4px;
+}
+.iconButton:hover {
+  background: var(--lyra-surface);
+}
+
+.body {
+  padding: 0 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 600;
+  border: none;
+  outline: none;
+  background: none;
+  width: 100%;
+  resize: none;
+  font-family: inherit;
+  color: var(--lyra-text);
+}
+
+.metaRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+.metaSelect {
+  font-size: 12px;
+  border: 1px solid var(--lyra-border);
+  border-radius: 5px;
+  padding: 3px 6px;
+  background: var(--lyra-surface);
+  color: var(--lyra-text);
+}
+
+.sectionLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--lyra-text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.description {
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  color: var(--lyra-text);
+}
+
+.detailsGrid {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: 6px 10px;
+  font-size: 12px;
+}
+.detailsGrid dt {
+  color: var(--lyra-text-faint);
+}
+
+.activityRow {
+  display: flex;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--lyra-text-muted);
+  padding: 4px 0;
+}
+.activityTime {
+  margin-left: auto;
+  color: var(--lyra-text-faint);
+  font-size: 10.5px;
+  flex-shrink: 0;
+}
+
+.askAgent {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 34px;
+  border-radius: 7px;
+  background: var(--lyra-accent-solid);
+  color: white;
+  border: none;
+  font-size: 13px;
+  font-weight: 500;
+}

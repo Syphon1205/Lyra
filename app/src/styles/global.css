@@ -1,0 +1,137 @@
+@import "./tokens.css";
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: transparent;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: var(--lyra-font);
+  font-size: 14px;
+  color: var(--lyra-text);
+  background: transparent;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+#root {
+  background: transparent;
+}
+
+/* Development-only css-preview backdrop scene. Never shipped as a
+   production wallpaper and never proof of native vibrancy — it only lets
+   DOM materials be exercised in a browser. Enabled by
+   <html data-material-mode="css-preview" data-preview-scene="...">. */
+[data-material-mode="css-preview"][data-preview-scene] body {
+  background:
+    linear-gradient(135deg, rgb(98 107 255 / 0.22), transparent 45%),
+    linear-gradient(225deg, rgb(56 189 248 / 0.2), transparent 50%),
+    linear-gradient(0deg, #dbe4f3, #f6f8fe);
+}
+
+button {
+  font-family: inherit;
+  color: inherit;
+}
+
+input,
+textarea {
+  font-family: inherit;
+  color: inherit;
+}
+
+::selection {
+  background: var(--lyra-selection);
+}
+
+a {
+  color: var(--lyra-accent-text);
+}
+
+/* Applied to the sidebar, global toolbar, and agent panel. Remaps the same
+   token names components already use to Lyra's fixed dark "chrome" palette,
+   so those three regions read as dark/smoky regardless of the workspace's
+   own Light/Dark/System appearance choice — the "dark chrome, light
+   workspace" composition from the approved reference. */
+.lyra-chrome-scope {
+  --lyra-text: var(--lyra-chrome-text);
+  --lyra-text-muted: var(--lyra-chrome-muted);
+  --lyra-text-faint: var(--lyra-chrome-faint);
+  --lyra-border: var(--lyra-chrome-border);
+  --lyra-border-strong: var(--lyra-chrome-highlight);
+  --lyra-selection: var(--lyra-chrome-selection);
+  --lyra-surface: rgba(255, 255, 255, 0.06);
+  --lyra-card: rgba(255, 255, 255, 0.08);
+  --lyra-canvas: var(--lyra-chrome-bg);
+  --lyra-glass-tint: var(--lyra-chrome-tint);
+  color: var(--lyra-chrome-text);
+}
+
+.lyra-scroll {
+  overflow: auto;
+}
+.lyra-scroll::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.lyra-scroll::-webkit-scrollbar-thumb {
+  background: var(--lyra-border-strong);
+  border-radius: 6px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+.lyra-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.lyra-menu {
+  background: var(--lyra-glass-tint);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  border: 1px solid var(--lyra-border);
+  border-radius: 8px;
+  padding: 4px;
+  min-width: 180px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+  z-index: 100;
+}
+[data-reduce-transparency="true"] .lyra-menu {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  background: var(--lyra-surface);
+}
+.lyra-menu-item {
+  font-size: 12.5px;
+  padding: 6px 8px;
+  border-radius: 5px;
+  color: var(--lyra-text);
+  outline: none;
+  cursor: default;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.lyra-menu-item[data-highlighted] {
+  background: var(--lyra-selection);
+  color: var(--lyra-accent-text);
+}
+.lyra-menu-item[data-disabled] {
+  color: var(--lyra-text-faint);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}

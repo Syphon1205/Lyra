@@ -1,0 +1,123 @@
+/* Semantic design tokens. Components read these — never a raw hex — so
+   density, theme, and glass variants stay centralized in one place.
+
+   Two independent scopes:
+   - Workspace tokens follow the user's Light/Dark/System appearance choice.
+   - Chrome tokens are a fixed dark, smoky scope applied to the sidebar,
+     global toolbar, and agent panel via [data-chrome="dark"] and .lyra-chrome-scope.
+     They do NOT change with the workspace theme — that's the "dark chrome,
+     light workspace" composition from the approved reference. */
+
+:root {
+  --lyra-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  --lyra-font-mono: "SF Mono", ui-monospace, "Menlo", monospace;
+
+  --lyra-radius-sm: 4px;
+  --lyra-radius-md: 6px;
+  --lyra-radius-lg: 10px;
+  --lyra-radius-xl: 18px;
+
+  --lyra-space-1: 4px;
+  --lyra-space-2: 8px;
+  --lyra-space-3: 12px;
+  --lyra-space-4: 16px;
+  --lyra-space-5: 20px;
+
+  --lyra-sidebar-width: 238px;
+  --lyra-panel-width: 332px;
+  --lyra-topbar-height: 54px;
+
+  /* Smooth 180-240ms transitions: calm, decisive, no bounce */
+  --lyra-motion-fast: 180ms;
+  --lyra-motion-base: 220ms;
+  --lyra-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --lyra-transition-fast: 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  --lyra-transition-base: 220ms cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Restrained periwinkle accent */
+  --lyra-accent-solid: #4f46e5;
+  --lyra-accent-text: #4338ca;
+  --lyra-accent-subtle: rgba(79, 70, 229, 0.12);
+  --lyra-accent-border: rgba(79, 70, 229, 0.32);
+  --lyra-accent: #4f46e5;
+
+  --lyra-danger: #ef4444;
+  --lyra-warning: #f59e0b;
+  --lyra-success: #10b981;
+
+  /* Board column tints — softly tinted pastel backgrounds */
+  --lyra-column-todo: #eef2f9;
+  --lyra-column-progress: #eaf1fb;
+  --lyra-column-review: #fff7e6;
+  --lyra-column-done: #e8f5ef;
+  --lyra-column-todo-dark: #1b1e24;
+  --lyra-column-progress-dark: #16202c;
+  --lyra-column-review-dark: #241f16;
+  --lyra-column-done-dark: #16221d;
+
+  /* Fixed dark "chrome" scope — sidebar, agent panel. Clean smoky glass. */
+  --lyra-chrome-tint: rgba(15, 23, 42, 0.62);
+  --lyra-chrome-bg: #0f172a;
+  --lyra-chrome-text: #ffffff;
+  --lyra-chrome-muted: rgba(255, 255, 255, 0.82);
+  --lyra-chrome-faint: rgba(255, 255, 255, 0.48);
+  --lyra-chrome-highlight: rgba(255, 255, 255, 0.15);
+  --lyra-chrome-border: rgba(255, 255, 255, 0.1);
+  --lyra-chrome-selection: rgba(255, 255, 255, 0.14);
+
+  /* Shared glass-material starting tokens (contract §5). */
+  --lyra-glass-tint: rgba(15, 23, 42, 0.62);
+  --lyra-glass-edge: rgba(255, 255, 255, 0.12);
+  --lyra-glass-highlight: rgba(255, 255, 255, 0.15);
+  --lyra-glass-text: #ffffff;
+  --lyra-glass-muted: rgba(255, 255, 255, 0.82);
+  --lyra-glass-hover: rgba(255, 255, 255, 0.08);
+  --lyra-glass-selected: rgba(255, 255, 255, 0.14);
+  --lyra-workspace: #f6f8fe;
+}
+
+:root,
+[data-theme="light"] {
+  --lyra-canvas: #f6f8fe;
+  --lyra-workspace: #f6f8fe;
+  --lyra-surface: #eef2f8;
+  --lyra-card: #ffffff;
+  --lyra-overlay: rgba(255, 255, 255, 0.75);
+  --lyra-border: rgba(15, 23, 42, 0.08);
+  --lyra-border-strong: rgba(15, 23, 42, 0.16);
+  --lyra-text: #0f172a;
+  --lyra-text-muted: #64748b;
+  --lyra-text-faint: #94a3b8;
+  --lyra-selection: rgba(79, 70, 229, 0.12);
+  --lyra-column-todo: #eef2f9;
+  --lyra-column-progress: #eaf1fb;
+  --lyra-column-review: #fff7e6;
+  --lyra-column-done: #e8f5ef;
+}
+
+[data-theme="dark"] {
+  --lyra-canvas: #101418;
+  --lyra-surface: #171b21;
+  --lyra-card: #1d2229;
+  --lyra-overlay: rgba(20, 23, 27, 0.72);
+  --lyra-border: rgba(222, 228, 234, 0.1);
+  --lyra-border-strong: rgba(222, 228, 234, 0.2);
+  --lyra-text: #e4e8ef;
+  --lyra-text-muted: #97a1b3;
+  --lyra-text-faint: #6b7386;
+  --lyra-selection: rgba(124, 135, 255, 0.18);
+  --lyra-accent-solid: #7c87ff;
+  --lyra-accent-text: #9aa2ff;
+  --lyra-column-todo: var(--lyra-column-todo-dark);
+  --lyra-column-progress: var(--lyra-column-progress-dark);
+  --lyra-column-review: var(--lyra-column-review-dark);
+  --lyra-column-done: var(--lyra-column-done-dark);
+}
+
+/* Reduce Transparency: glass surfaces fall back to a finished solid look. */
+[data-reduce-transparency="true"] {
+  --lyra-glass-tint: var(--lyra-surface);
+  --lyra-chrome-tint: var(--lyra-chrome-bg);
+  --lyra-glass-edge: var(--lyra-border);
+  --lyra-glass-highlight: transparent;
+}

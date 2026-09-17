@@ -1,0 +1,47 @@
+.container {
+  height: 100%;
+  overflow-y: auto;
+  padding: 20px 24px;
+}
+.heading {
+  font-size: 22px;
+  font-weight: 600;
+  margin: 0 0 16px;
+}
+.groupLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--lyra-text-faint);
+  text-transform: uppercase;
+  margin: 14px 0 4px;
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 32px;
+  padding: 0 6px;
+  border-radius: 5px;
+  font-size: 12.5px;
+}
+.row:hover {
+  background: var(--lyra-surface);
+}
+.key {
+  font-family: var(--lyra-font-mono);
+  font-size: 11px;
+  color: var(--lyra-text-faint);
+  width: 60px;
+}
+.title {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.empty {
+  color: var(--lyra-text-faint);
+  font-size: 13px;
+  padding: 40px 0;
+  text-align: center;
+}

@@ -1,0 +1,155 @@
+.surface {
+  opacity: 1;
+}
+
+/* Dark chrome base — sidebar + agent panel. Clean smoky glass over desktop
+   backdrop. High clarity, restrained translucency, soft inner highlights. */
+.darkChrome {
+  background: rgba(15, 23, 42, 0.62);
+  backdrop-filter: blur(28px) saturate(160%) contrast(105%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%) contrast(105%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), inset 1px 0 0 rgba(255, 255, 255, 0.06);
+}
+
+/* Pale toolbar material — deliberately light, translucent, never dark chrome. */
+.lightToolbar {
+  background: rgba(246, 248, 254, 0.72);
+  backdrop-filter: blur(24px) saturate(140%);
+  -webkit-backdrop-filter: blur(24px) saturate(140%);
+  border: 1px solid rgba(25, 34, 56, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+/* Compact control / composer surface. */
+.compact {
+  background: rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+.lyra-chrome-scope .compact {
+  background: rgba(0, 0, 0, 0.28);
+}
+
+/* Popover surface for floating menus and command palette */
+.popover {
+  background: rgba(26, 32, 46, 0.78);
+  backdrop-filter: blur(32px) saturate(180%);
+  -webkit-backdrop-filter: blur(32px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+/* Scope-aware legacy aliases: inside .lyra-chrome-scope they resolve dark,
+   outside they resolve light — preserved for existing call sites. */
+.legacyStandard {
+  background: var(--lyra-glass-tint);
+}
+.legacySubtle {
+  background: var(--lyra-glass-tint);
+}
+
+.solid {
+  background: var(--lyra-surface);
+}
+.lyra-chrome-scope .solid {
+  background: var(--lyra-chrome-bg);
+}
+
+.accent {
+  background: var(--lyra-accent-subtle);
+}
+
+.border {
+  border: 1px solid var(--lyra-border);
+}
+.darkChrome.border {
+  border-color: var(--lyra-glass-edge);
+}
+.lightToolbar.border {
+  border-color: rgba(25, 34, 56, 0.08);
+}
+.compact.border {
+  border-color: var(--lyra-glass-edge);
+}
+.popover.border {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* css-preview ONLY: development backdrop blur over an explicit test scene. */
+[data-material-mode="css-preview"] .darkChrome {
+  backdrop-filter: blur(28px) saturate(1.15);
+  -webkit-backdrop-filter: blur(28px) saturate(1.15);
+}
+[data-material-mode="css-preview"] .lightToolbar {
+  backdrop-filter: blur(28px) saturate(1.15);
+  -webkit-backdrop-filter: blur(28px) saturate(1.15);
+}
+[data-material-mode="css-preview"] .compact,
+[data-material-mode="css-preview"] .legacyStandard {
+  backdrop-filter: blur(20px) saturate(1.2);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+}
+[data-material-mode="css-preview"] .popover {
+  backdrop-filter: blur(32px) saturate(1.25);
+  -webkit-backdrop-filter: blur(32px) saturate(1.25);
+}
+[data-material-mode="css-preview"] .legacySubtle {
+  backdrop-filter: blur(10px) saturate(1.2);
+  -webkit-backdrop-filter: blur(10px) saturate(1.2);
+}
+
+/* Native vibrancy: clean desktop diffusion. */
+[data-material-mode="native-vibrancy"] .darkChrome {
+  backdrop-filter: blur(28px) saturate(160%) contrast(105%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%) contrast(105%);
+}
+[data-material-mode="native-vibrancy"] .lightToolbar {
+  backdrop-filter: blur(24px) saturate(140%);
+  -webkit-backdrop-filter: blur(24px) saturate(140%);
+}
+[data-material-mode="native-vibrancy"] .compact,
+[data-material-mode="native-vibrancy"] .popover {
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+}
+
+/* Documented solid fallbacks: no backdrop filtering, finished solids. */
+[data-material-mode="solid-accessibility"] .darkChrome,
+[data-material-mode="solid-unsupported"] .darkChrome {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  background: var(--lyra-chrome-bg);
+}
+[data-material-mode="solid-accessibility"] .lightToolbar,
+[data-material-mode="solid-unsupported"] .lightToolbar {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  background: var(--lyra-workspace);
+}
+[data-material-mode="solid-accessibility"] .compact,
+[data-material-mode="solid-unsupported"] .compact,
+[data-material-mode="solid-accessibility"] .popover,
+[data-material-mode="solid-unsupported"] .popover,
+[data-material-mode="solid-accessibility"] .legacyStandard,
+[data-material-mode="solid-unsupported"] .legacyStandard,
+[data-material-mode="solid-accessibility"] .legacySubtle,
+[data-material-mode="solid-unsupported"] .legacySubtle {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+[data-reduce-transparency="true"] .darkChrome,
+[data-reduce-transparency="true"] .lightToolbar,
+[data-reduce-transparency="true"] .compact,
+[data-reduce-transparency="true"] .popover,
+[data-reduce-transparency="true"] .legacyStandard,
+[data-reduce-transparency="true"] .legacySubtle {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+[data-reduce-transparency="true"] .darkChrome {
+  background: var(--lyra-chrome-bg);
+}

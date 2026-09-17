@@ -1,0 +1,395 @@
+.container {
+  padding: 24px 32px 40px;
+  overflow-y: auto;
+  height: 100%;
+  background: var(--lyra-workspace);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+.headerIconWrap {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--lyra-card);
+  border: 1px solid var(--lyra-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--lyra-accent-solid);
+}
+.title {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--lyra-text);
+  line-height: 1.2;
+}
+.subtitle {
+  font-size: 13px;
+  color: var(--lyra-text-muted);
+  margin: 2px 0 0;
+}
+.newAgentBtn {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 14px;
+  border-radius: 6px;
+  background: var(--lyra-accent-solid);
+  color: white;
+  border: none;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: default;
+}
+.newAgentBtn:hover {
+  filter: brightness(1.06);
+}
+
+.tabsRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--lyra-border);
+  margin-bottom: 20px;
+}
+.tabs {
+  display: flex;
+  gap: 6px;
+}
+.tab {
+  background: none;
+  border: none;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--lyra-text-muted);
+  padding: 6px 8px 10px;
+  border-bottom: 2px solid transparent;
+  cursor: default;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.tabActive {
+  color: var(--lyra-accent-solid);
+  font-weight: 600;
+  border-bottom-color: var(--lyra-accent-solid);
+}
+.badge {
+  font-size: 10.5px;
+  background: var(--lyra-surface);
+  color: var(--lyra-text-faint);
+  padding: 1px 6px;
+  border-radius: 999px;
+}
+
+.searchBox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 6px;
+  background: var(--lyra-card);
+  border: 1px solid var(--lyra-border);
+  width: 200px;
+  margin-bottom: 6px;
+}
+.searchBox input {
+  border: none;
+  background: none;
+  outline: none;
+  font-size: 12px;
+  color: var(--lyra-text);
+  width: 100%;
+}
+
+.sectionHeader {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--lyra-text-muted);
+  margin-bottom: 12px;
+}
+
+.cardsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 16px;
+}
+
+.agentCard {
+  background: var(--lyra-card);
+  border: 1px solid var(--lyra-border);
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.cardTop {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.providerLogo {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--lyra-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--lyra-text);
+  flex-shrink: 0;
+}
+.agentName {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--lyra-text);
+}
+.statusPillRunning {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #10B981;
+  background: rgba(16, 185, 129, 0.1);
+  padding: 1px 6px;
+  border-radius: 999px;
+}
+.dotGreen {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10B981;
+}
+.statusPillIdle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--lyra-text-muted);
+  background: var(--lyra-surface);
+  padding: 1px 6px;
+  border-radius: 999px;
+}
+.dotGray {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--lyra-text-faint);
+}
+.agentDesc {
+  font-size: 12px;
+  color: var(--lyra-text-muted);
+  margin-top: 2px;
+}
+.elapsed {
+  font-size: 11px;
+  font-family: var(--lyra-font-mono);
+  color: var(--lyra-text-faint);
+}
+
+.cardTags {
+  display: flex;
+  gap: 6px;
+}
+.tag {
+  font-size: 10.5px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--lyra-surface);
+  color: var(--lyra-text-muted);
+}
+
+.taskBlock {
+  background: var(--lyra-surface);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+.taskTitle {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--lyra-text);
+}
+.taskSub {
+  font-size: 11px;
+  color: var(--lyra-text-muted);
+  font-family: var(--lyra-font-mono);
+  margin: 2px 0 8px;
+}
+
+.stepList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11.5px;
+}
+.stepItemDone {
+  color: #10B981;
+}
+.stepItemActive {
+  color: #2563EB;
+  font-weight: 500;
+}
+.stepItemPending {
+  color: var(--lyra-text-faint);
+}
+
+.cardActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
+}
+.viewSessionBtn {
+  background: var(--lyra-surface);
+  border: 1px solid var(--lyra-border);
+  color: var(--lyra-text);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 5px 12px;
+  border-radius: 6px;
+  cursor: default;
+}
+.viewSessionBtn:hover {
+  background: var(--lyra-card);
+}
+.startBtn {
+  background: var(--lyra-accent-solid);
+  color: white;
+  border: none;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 5px 14px;
+  border-radius: 6px;
+  cursor: default;
+}
+.cardOutlineBtn {
+  background: none;
+  border: 1px solid var(--lyra-border);
+  color: var(--lyra-text-muted);
+  font-size: 12px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  cursor: default;
+}
+.cardIconBtn {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--lyra-text-muted);
+  display: flex;
+  padding: 4px;
+  cursor: default;
+}
+
+.providersGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 12px;
+}
+.providerItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--lyra-card);
+  border: 1px solid var(--lyra-border);
+}
+.provName {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--lyra-text);
+}
+.provStatusInstalled {
+  font-size: 11px;
+  color: #10B981;
+}
+.provStatusInstall {
+  font-size: 11px;
+  color: var(--lyra-accent-solid);
+  cursor: default;
+}
+
+.runsTable {
+  background: var(--lyra-card);
+  border: 1px solid var(--lyra-border);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-top: 10px;
+}
+.runsHeader {
+  display: flex;
+  align-items: center;
+  padding: 8px 14px;
+  background: var(--lyra-surface);
+  border-bottom: 1px solid var(--lyra-border);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--lyra-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.runsRow {
+  display: flex;
+  align-items: center;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--lyra-border);
+  font-size: 12.5px;
+  cursor: default;
+}
+.runsRow:last-child {
+  border-bottom: none;
+}
+.runsRow:hover {
+  background: var(--lyra-surface);
+}
+.runDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #3B82F6;
+}
+
+.badgeRunning {
+  display: inline-flex;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 500;
+  background: rgba(59, 130, 246, 0.1);
+  color: #2563EB;
+}
+.badgeCompleted {
+  display: inline-flex;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 500;
+  background: rgba(16, 185, 129, 0.1);
+  color: #10B981;
+}
+.badgeFailed {
+  display: inline-flex;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 500;
+  background: rgba(239, 68, 68, 0.1);
+  color: #EF4444;
+}

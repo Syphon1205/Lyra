@@ -1,0 +1,45 @@
+.container {
+  height: 100%;
+  overflow: auto;
+  padding: 0 24px 24px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+
+th {
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--lyra-text-faint);
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--lyra-border);
+  cursor: default;
+  user-select: none;
+  position: sticky;
+  top: 0;
+  background: var(--lyra-canvas);
+}
+th:hover {
+  color: var(--lyra-text-muted);
+}
+
+td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--lyra-border);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+tr:hover td {
+  background: var(--lyra-surface);
+}
+
+.key {
+  font-family: var(--lyra-font-mono);
+  color: var(--lyra-text-faint);
+}

@@ -1,0 +1,198 @@
+.sidebar {
+  width: var(--lyra-sidebar-width);
+  min-width: 200px;
+  max-width: 280px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  opacity: 1;
+  overflow: hidden;
+  -webkit-app-region: drag;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 14px 10px;
+  padding-top: 30px; /* clear the traffic lights */
+  -webkit-app-region: drag;
+}
+.mark {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+.wordmark {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.workspaceSwitcher {
+  margin: 0 10px 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid var(--lyra-chrome-border);
+  background: rgba(255, 255, 255, 0.05);
+  -webkit-app-region: no-drag;
+}
+.workspaceAvatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  background: var(--lyra-accent-solid);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: white;
+  flex-shrink: 0;
+}
+.workspaceName {
+  font-size: 12px;
+  font-weight: 600;
+}
+.workspaceSub {
+  font-size: 10px;
+  color: var(--lyra-chrome-faint);
+}
+
+.nav {
+  flex: 1;
+  overflow-y: auto;
+  padding: 2px 10px;
+  -webkit-app-region: no-drag;
+}
+
+.section {
+  margin-top: 14px;
+}
+.sectionLabel {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--lyra-chrome-faint);
+  padding: 0 8px 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  height: 31px;
+  padding: 0 8px;
+  border-radius: 7px;
+  font-size: 12.5px;
+  color: var(--lyra-chrome-text);
+  cursor: default;
+  user-select: none;
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+  transition: background 180ms ease, color 180ms ease;
+}
+.row:hover {
+  background: var(--lyra-glass-hover);
+}
+.rowActive {
+  background: var(--lyra-glass-selected);
+  color: white;
+}
+.rowIcon {
+  color: var(--lyra-chrome-muted);
+  flex-shrink: 0;
+  display: flex;
+}
+.rowActive .rowIcon {
+  color: white;
+}
+.rowLabel {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.badge {
+  font-size: 10px;
+  font-weight: 600;
+  color: white;
+  background: var(--lyra-accent-solid);
+  border-radius: 999px;
+  padding: 1px 6px;
+}
+
+.projectGroup {
+  display: flex;
+  flex-direction: column;
+}
+.subRow {
+  composes: row;
+  padding-left: 30px;
+  font-size: 12px;
+  color: var(--lyra-chrome-muted);
+}
+.projectTile {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px 12px;
+  border-top: 1px solid var(--lyra-chrome-border);
+  -webkit-app-region: no-drag;
+}
+.footer button {
+  background: none;
+  border: none;
+  display: flex;
+  align-items: center;
+  color: var(--lyra-chrome-muted);
+  cursor: default;
+  padding: 4px;
+  border-radius: 4px;
+}
+.footer button:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+.profile {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+.profileName {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--lyra-chrome-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.profilePlan {
+  font-size: 10px;
+  color: var(--lyra-chrome-faint);
+}
+.avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 600;
+  color: white;
+}

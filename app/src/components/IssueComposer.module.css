@@ -1,0 +1,76 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  padding-top: 120px;
+  z-index: 200;
+}
+.card {
+  width: 480px;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--lyra-text-faint);
+}
+.titleInput {
+  font-size: 16px;
+  font-weight: 500;
+  border: none;
+  outline: none;
+  background: none;
+  color: var(--lyra-text);
+}
+.descInput {
+  font-size: 12.5px;
+  border: none;
+  outline: none;
+  background: none;
+  resize: none;
+  color: var(--lyra-text-muted);
+  font-family: inherit;
+}
+.row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--lyra-border);
+  padding-top: 10px;
+}
+.row select {
+  font-size: 11.5px;
+  border: 1px solid var(--lyra-border);
+  border-radius: 5px;
+  padding: 3px 6px;
+  background: var(--lyra-surface);
+  color: var(--lyra-text-muted);
+}
+.footer {
+  display: flex;
+  justify-content: flex-end;
+}
+.createButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--lyra-accent-solid);
+  color: white;
+  border: none;
+  border-radius: 7px;
+  padding: 7px 14px;
+  font-size: 12.5px;
+  font-weight: 500;
+}
+.createButton:disabled {
+  opacity: 0.5;
+}
+.hint {
+  opacity: 0.7;
+}

@@ -1,0 +1,178 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #0f141c;
+  color: #f8fafc;
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px;
+  height: 44px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.tabs {
+  display: flex;
+  gap: 6px;
+}
+
+.tab {
+  background: none;
+  border: none;
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.6);
+  padding: 4px 10px;
+  border-radius: 5px;
+  cursor: default;
+}
+.tabActive {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-weight: 600;
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  display: flex;
+  padding: 4px;
+  border-radius: 4px;
+  cursor: default;
+}
+.closeBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.fileBar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  font-size: 12px;
+  background: rgba(0, 0, 0, 0.35);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.fileName {
+  font-family: var(--lyra-font-mono);
+  color: #e2e8f0;
+  font-size: 11.5px;
+}
+
+.diffEditor {
+  flex: 1;
+  overflow-y: auto;
+  font-family: var(--lyra-font-mono);
+  font-size: 11.5px;
+  line-height: 1.6;
+  padding: 10px 0;
+  background: #0b0f17;
+}
+
+.diffLine {
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+}
+.lineNum {
+  width: 34px;
+  color: rgba(255, 255, 255, 0.28);
+  user-select: none;
+  text-align: right;
+  padding-right: 12px;
+  font-size: 11px;
+}
+.lineSign {
+  width: 14px;
+  user-select: none;
+  font-weight: 600;
+}
+.lineContent {
+  flex: 1;
+  white-space: pre;
+}
+
+.lineNormal {
+  color: #cbd5e1;
+}
+.lineRemoved {
+  background: rgba(239, 68, 68, 0.18);
+  color: #fca5a5;
+}
+.lineRemoved .lineSign {
+  color: #ef4444;
+}
+.lineAdded {
+  background: rgba(16, 185, 129, 0.18);
+  color: #86efac;
+}
+.lineAdded .lineSign {
+  color: #10b981;
+}
+
+.footer {
+  padding: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rationaleBox {
+  font-size: 11.5px;
+  color: rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 8px 12px;
+}
+
+.actionButtons {
+  display: flex;
+  gap: 8px;
+}
+.rejectBtn {
+  flex: 1;
+  height: 30px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: white;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: default;
+}
+.rejectBtn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+.applyBtn {
+  flex: 1;
+  height: 30px;
+  border-radius: 6px;
+  background: var(--lyra-accent-solid);
+  border: none;
+  color: white;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: default;
+}
+.applyBtn:hover {
+  filter: brightness(1.08);
+}
+
+.assistantNote {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+  line-height: 1.4;
+}

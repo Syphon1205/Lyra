@@ -1,0 +1,48 @@
+.root {
+  position: relative;
+  display: flex;
+  height: 100%;
+  background: transparent;
+  overflow: hidden;
+}
+
+.desktopBackdrop {
+  position: absolute;
+  inset: 0;
+  background-image: url("../assets/desktop-wallpaper.jpg");
+  background-size: cover;
+  background-position: center;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.main {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: transparent;
+}
+
+.contentRow {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+  background: transparent;
+  gap: 12px;
+  padding: 0 12px 12px 0;
+}
+
+.center {
+  flex: 1;
+  min-width: 0;
+  background: var(--lyra-workspace);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 6px 28px rgba(0, 0, 0, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
