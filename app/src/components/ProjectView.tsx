@@ -6,6 +6,11 @@ import { STATUS_LABEL, ISSUE_STATUSES_ORDERED } from "../lib/issueMeta";
 import { Board } from "./Board/Board";
 import { Backlog } from "./Backlog/Backlog";
 import { ListView } from "./ListView/ListView";
+import { TimelineView } from "./Timeline/TimelineView";
+import { ComponentsView } from "./Components/ComponentsView";
+import { ReleasesView } from "./Releases/ReleasesView";
+import { PagesView } from "./Pages/PagesView";
+import { ProjectSettingsView } from "./ProjectSettings/ProjectSettingsView";
 import styles from "./ProjectView.module.css";
 
 const TABS = [
@@ -27,6 +32,9 @@ export function ProjectView({ projectId }: { projectId: string }) {
   const users = useLyraStore((s) => s.users);
 
   if (!project) return null;
+
+  const showFilterStrip =
+    projectTab === "board" || projectTab === "backlog" || projectTab === "list" || projectTab === "timeline";
 
   return (
     <div className={styles.container}>
@@ -100,19 +108,18 @@ export function ProjectView({ projectId }: { projectId: string }) {
       </div>
 
       {/* Filter Strip */}
-      <FilterStrip projectId={projectId} />
+      {showFilterStrip && <FilterStrip projectId={projectId} />}
 
       {/* Workspace Content */}
       <div className={styles.content}>
         {projectTab === "board" && <Board projectId={projectId} />}
         {projectTab === "backlog" && <Backlog projectId={projectId} />}
         {projectTab === "list" && <ListView projectId={projectId} />}
-        {projectTab !== "board" && projectTab !== "backlog" && projectTab !== "list" && (
-          <div style={{ padding: 40, textAlign: "center", color: "var(--lyra-text-muted)" }}>
-            <h3 style={{ fontSize: 16, fontWeight: 600 }}>{String(projectTab).charAt(0).toUpperCase() + String(projectTab).slice(1)}</h3>
-            <p style={{ fontSize: 13, marginTop: 6 }}>Switch to Board or Backlog to view active cycles and tasks.</p>
-          </div>
-        )}
+        {projectTab === "timeline" && <TimelineView projectId={projectId} />}
+        {projectTab === "components" && <ComponentsView projectId={projectId} />}
+        {projectTab === "releases" && <ReleasesView projectId={projectId} />}
+        {projectTab === "pages" && <PagesView projectId={projectId} />}
+        {projectTab === "settings" && <ProjectSettingsView projectId={projectId} />}
       </div>
     </div>
   );

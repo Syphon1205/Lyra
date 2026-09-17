@@ -1,0 +1,163 @@
+.container {
+  padding: 16px 24px 40px;
+  overflow-y: auto;
+  height: 100%;
+}
+
+.headerBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  padding: 12px 16px;
+  background: var(--lyra-card);
+  border: 1px solid var(--lyra-border);
+  border-radius: 10px;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.headerIconWrap {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--lyra-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--lyra-accent-solid);
+}
+
+.headerTitle {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--lyra-text);
+}
+
+.newBtn {
+  background: var(--lyra-accent-solid);
+  color: white;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: default;
+  transition: opacity 0.12s ease;
+}
+
+.newBtn:hover {
+  opacity: 0.9;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.releaseCard {
+  background: var(--lyra-card);
+  border: 1px solid var(--lyra-border);
+  border-radius: 10px;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.topRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.versionBadge {
+  font-family: var(--lyra-font-mono);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--lyra-text);
+}
+
+.statusPill {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.statusReleased {
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+}
+
+.statusUnreleased {
+  background: rgba(59, 130, 246, 0.12);
+  color: #3b82f6;
+}
+
+.progressBarTrack {
+  height: 6px;
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progressBarFill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--lyra-accent-solid);
+}
+
+.bottomRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--lyra-text-muted);
+}
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  width: 400px;
+  background: var(--lyra-surface);
+  border: 1px solid var(--lyra-border);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.input {
+  background: var(--lyra-canvas);
+  border: 1px solid var(--lyra-border);
+  color: var(--lyra-text);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 13px;
+  outline: none;
+}
+
+.input:focus {
+  border-color: var(--lyra-accent-solid);
+}

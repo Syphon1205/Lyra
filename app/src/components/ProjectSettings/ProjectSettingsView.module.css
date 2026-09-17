@@ -1,0 +1,74 @@
+.container {
+  padding: 24px 36px;
+  overflow-y: auto;
+  height: 100%;
+  max-width: 680px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--lyra-text);
+}
+
+.card {
+  background: var(--lyra-card);
+  border: 1px solid var(--lyra-border);
+  border-radius: 10px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--lyra-text);
+}
+
+.desc {
+  font-size: 11.5px;
+  color: var(--lyra-text-muted);
+}
+
+.input {
+  background: var(--lyra-surface);
+  border: 1px solid var(--lyra-border);
+  color: var(--lyra-text);
+  border-radius: 6px;
+  padding: 7px 12px;
+  font-size: 13px;
+  outline: none;
+}
+
+.input:focus {
+  border-color: var(--lyra-accent-solid);
+}
+
+.saveBtn {
+  background: var(--lyra-accent-solid);
+  color: white;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  align-self: flex-start;
+  cursor: default;
+  transition: opacity 0.12s ease;
+}
+
+.saveBtn:hover {
+  opacity: 0.9;
+}
